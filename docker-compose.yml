@@ -2,8 +2,10 @@ services:
   frontend:
     build:
       context: .
-    container_name: react-app
+    # Unique name so this stack can run next to (or replace) the old "react-app" container
+    container_name: thepk-site
     ports:
-      - "3001:3001"
+      # Host port defaults to 3001; set HOST_PORT in Portainer if another stack still uses 3001
+      - "${HOST_PORT:-3001}:3001"
     restart: unless-stopped
     pull_policy: build
