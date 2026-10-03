@@ -5,7 +5,7 @@ services:
     # Unique name so this stack can run next to (or replace) the old "react-app" container
     container_name: thepk-site
     ports:
-      # Host port defaults to 3001; set HOST_PORT in Portainer if another stack still uses 3001
-      - "${HOST_PORT:-3001}:3001"
+      # Published on host port 3012 (the old react-app stack keeps 3001); override with HOST_PORT
+      - "${HOST_PORT:-3012}:3001"
     restart: unless-stopped
     pull_policy: build

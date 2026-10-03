@@ -67,4 +67,4 @@ For visual changes, also run `npm run build && PORT=3002 npm start` and look at 
 
 ## Deployment
 
-Push to `main` → after the `check` job passes, `.github/workflows/deploy.yml` POSTs to a Portainer webhook (skipped when the `PORTAINER_WEBHOOK_URL` repo secret is missing), which rebuilds the `docker-compose.yml` service. The Dockerfile is multi-stage: `npm ci && npm run build`, then a slim Node 20 image runs `node server/index.js` on port 3001 with a `/healthz` healthcheck. `vite.config.js` `server.allowedHosts` only affects `npm run dev`.
+Push to `main` → after the `check` job passes, `.github/workflows/deploy.yml` POSTs to a Portainer webhook (skipped when the `PORTAINER_WEBHOOK_URL` repo secret is missing), which rebuilds the `docker-compose.yml` service. The Dockerfile is multi-stage: `npm ci && npm run build`, then a slim Node 20 image runs `node server/index.js` on port 3001 inside the container, published on host port 3012 by `docker-compose.yml` (container `thepk-site`; override with `HOST_PORT`), with a `/healthz` healthcheck. `vite.config.js` `server.allowedHosts` only affects `npm run dev`.
