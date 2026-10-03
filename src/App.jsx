@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Layout from './components/Layout';
@@ -21,16 +21,15 @@ import PortraitProcessor from './pages/tools/PortraitProcessor';
 import LLMChat from './pages/LLMChat';
 import Pipeline from './pages/Pipeline';
 import DCMetro from './pages/DCMetro';
+import NotFound from './pages/NotFound';
+import { RouteSeo } from './hooks/useSeo';
 import './styles/App.css';
 
 function App() {
-  useEffect(() => {
-    document.title = 'Pradhyuman Yadav';
-  }, []);
-
   return (
     <ThemeProvider>
       <Router>
+        <RouteSeo />
         <Layout>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -52,6 +51,8 @@ function App() {
             <Route path="/llm-chat" element={<LLMChat />} />
             <Route path="/pipeline" element={<Pipeline />} />
             <Route path="/dc-metro" element={<DCMetro />} />
+            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
       </Router>

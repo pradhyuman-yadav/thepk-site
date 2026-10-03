@@ -178,7 +178,7 @@ const LLMChat = () => {
     <div className="llm-chat-page">
       <header className="page-header">
         <h1 className="page-title">AI Chat</h1>
-        <p className="page-subtitle">Locally deployed SLM/LLM — MLOps showcase</p>
+        <p className="page-subtitle">Locally deployed SLM/LLM, an MLOps showcase</p>
       </header>
 
       <div className="chat-container">

@@ -453,7 +453,7 @@ const APITester = () => {
             {/* Save Button */}
             {url && (
               <button className="save-request-button" onClick={saveRequest}>
-                💾 Save Request
+                Save Request
               </button>
             )}
           </div>

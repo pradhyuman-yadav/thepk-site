@@ -177,43 +177,6 @@ body {
   box-shadow: 0 4px 12px var(--shadow-color);
 }
 
-/* Navigation divider for external services */
-.nav-divider {
-  width: 100%;
-  height: 1px;
-  background-color: var(--border-color);
-  margin: 0.5rem 0;
-  opacity: 0.5;
-}
-
-/* External service links styling */
-.nav-external-link {
-  text-decoration: none;
-  color: var(--text-color);
-  font-weight: 400;
-  font-size: 0.75rem;
-  padding: 0.8rem 0.6rem;
-  border: 1px solid var(--border-color);
-  transition: all 0.2s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-align: center;
-  display: block;
-  white-space: nowrap;
-  border-radius: 3px;
-  background-color: var(--page-bg);
-  box-shadow: 0 2px 6px var(--shadow-color);
-  opacity: 0.85;
-}
-
-.nav-external-link:hover {
-  border: 1px solid var(--border-color);
-  background-color: var(--nav-hover);
-  box-shadow: 0 4px 10px var(--shadow-color);
-  transform: translateX(-5px);
-  opacity: 1;
-}
-
 /* Dark mode toggle */
 .dark-mode-toggle {
   background: var(--page-bg);
@@ -6844,4 +6807,499 @@ body {
   .dark-mode-toggle {
     display: none;
   }
+}
+
+/* ==========================================================================
+   Redesign pass (Sept 2026): shape lock, reduced motion, home front page,
+   linked article index, article pages, crawler fallback.
+   Rules below are ordered after the originals on purpose so they win ties.
+   ========================================================================== */
+
+/* Shape lock: the A4 sheet is square-cornered, so everything is.
+   Documented exception: loading spinners and dots stay round. */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
+
+.loading-spinner .spinner,
+.loading-dots span {
+  border-radius: 50% !important;
+}
+
+/* Keyboard focus */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Text links and text buttons share one treatment */
+.text-link,
+.text-button {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--border);
+  transition: text-decoration-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.text-link:hover,
+.text-button:hover {
+  text-decoration-color: var(--ink);
+}
+
+.text-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.text-button:active {
+  transform: translateY(1px);
+}
+
+/* Dark mode toggle holds a Phosphor icon now */
+.dark-mode-toggle {
+  color: var(--text-color);
+}
+
+/* Section headings inside pages (sentence case, no tracking) */
+.home-page .section-heading,
+.single-article-page .section-heading {
+  font-size: 1.5rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  text-align: left;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+  padding-top: 0.6rem;
+  border-top: var(--rule-thick) solid var(--ink);
+}
+
+/* ---------- Home: front page ---------- */
+.home-page .home-masthead .page-title {
+  font-size: clamp(1.9rem, 4.2vw, 2.5rem);
+  line-height: 1.15;
+  margin-bottom: 0.75rem;
+}
+
+.home-page .home-masthead .page-subtitle {
+  font-size: 1.05rem;
+  text-align: left;
+  max-width: 60ch;
+  margin: 0;
+}
+
+.home-section {
+  margin: 0 0 3rem;
+}
+
+.home-lead {
+  padding-bottom: 0.5rem;
+}
+
+.home-page .home-lead-title {
+  font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+  margin: 0 0 0.75rem;
+  text-align: left;
+}
+
+.home-lead-title a,
+.article-card-title a,
+.home-more-title {
+  color: var(--ink);
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.home-lead-title a:hover,
+.article-card-title a:hover,
+.home-more-title:hover {
+  background-size: 100% 1px;
+}
+
+.home-page .home-lead-summary {
+  font-size: 1.1rem;
+  line-height: 1.65;
+  text-align: left;
+  max-width: 62ch;
+  margin: 0 0 1rem;
+}
+
+.home-lead-cta {
+  font-size: 1rem;
+}
+
+.home-more {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 2rem;
+}
+
+.home-more-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.home-more-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.home-more-date {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink);
+  opacity: 0.7;
+}
+
+.home-page .home-all {
+  margin: 1rem 0 0;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.home-page .home-infra-note {
+  font-size: 1rem;
+  text-align: left;
+  margin: 0 0 1rem;
+}
+
+/* ---------- Topic index (home + articles) ---------- */
+.topic-index {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2rem;
+}
+
+.topic-group-label {
+  font-size: 0.9rem;
+  font-style: italic;
+  font-weight: 400;
+  margin: 0 0 0.5rem;
+  color: var(--ink);
+}
+
+.topic-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.topic-link {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.topic-link:hover,
+.topic-link.active {
+  border-bottom-color: var(--ink);
+}
+
+.topic-link.active {
+  font-weight: 700;
+}
+
+.topic-count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+/* ---------- Articles index ---------- */
+.topic-filter {
+  margin: 0 0 1.75rem;
+}
+
+.topic-filter summary {
+  cursor: pointer;
+  font-style: italic;
+  margin-bottom: 1rem;
+  width: fit-content;
+}
+
+.articles-list {
+  border: none;
+}
+
+.article-card:hover {
+  background-color: transparent;
+  margin: 0;
+  padding: 1.25rem 0;
+}
+
+.articles-page .article-card-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  border: none;
+  text-align: left;
+}
+
+.articles-page .article-card-excerpt {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: left;
+  max-width: 66ch;
+  margin: 0.5rem 0;
+  padding: 0 0 0 0.9rem;
+}
+
+.article-card-tags {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+}
+
+a.art-tag {
+  display: inline-block;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+a.art-tag:hover {
+  background-color: var(--ink);
+  color: var(--page);
+  opacity: 1;
+}
+
+.articles-more {
+  margin: 2rem 0 0;
+  text-align: center;
+}
+
+/* ---------- Single article ---------- */
+.breadcrumb ol {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.breadcrumb li + li::before {
+  content: '/';
+  margin-right: 0.4rem;
+  opacity: 0.5;
+}
+
+.breadcrumb a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.breadcrumb a:hover {
+  border-bottom-color: var(--ink);
+}
+
+.art-header {
+  border-top: var(--rule-thick) solid var(--ink);
+  padding-top: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.art-meta a {
+  color: inherit;
+}
+
+.art-body {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  max-width: 68ch;
+}
+
+.art-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.art-filed {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.art-updated {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.related-articles {
+  margin-top: 3rem;
+}
+
+/* ---------- Loading skeletons ---------- */
+.skeleton-line {
+  display: block;
+  height: 0.9rem;
+  margin: 0.55rem 0;
+  background: var(--muted);
+  width: 100%;
+}
+
+.skeleton-line--title {
+  height: 1.7rem;
+  width: 85%;
+}
+
+.skeleton-line--title.short {
+  width: 55%;
+}
+
+.skeleton-line--meta {
+  height: 0.7rem;
+  width: 35%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton .skeleton-line {
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ---------- Infrastructure diagram: monochrome ---------- */
+.infrastructure-diagram .back-wires-embed [stroke="#d5d5d5"] {
+  stroke: var(--border);
+}
+
+.infrastructure-diagram .back-wires-embed [fill="#666"] {
+  fill: var(--ink);
+}
+
+.infrastructure-diagram .back-wires-embed [fill="#999"] {
+  fill: var(--ink);
+  fill-opacity: 0.65;
+}
+
+.infrastructure-diagram .front-wires-embed [stroke] {
+  stroke: var(--ink);
+}
+
+.infrastructure-diagram .back-wires-embed svg {
+  filter: none;
+}
+
+/* ---------- Crawler fallback inside #root (replaced by React on load) ---------- */
+.ssr-shell {
+  max-width: 70ch;
+  margin: 2rem auto;
+  padding: 0 16px;
+  font-family: var(--font-serif);
+  color: var(--ink);
+  background: var(--page);
+}
+
+.ssr-shell nav a {
+  margin-right: 0.75rem;
+  color: var(--ink);
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 768px) {
+  .home-more,
+  .topic-index {
+    grid-template-columns: 1fr;
+  }
+
+  .articles-page .article-card-title {
+    font-size: 1.25rem;
+  }
+
+  .art-body {
+    font-size: 1rem;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* The sweeping wire animation has no static equivalent; show the still diagram only */
+  .infrastructure-diagram .front-wires-embed {
+    display: none;
+  }
+}
+
+/* Fixed mobile menu button: solid backing so scrolled text never shows through it */
+.hamburger-menu {
+  background: var(--page);
+  border: 1px solid var(--border);
+}
+
+/* About: the name is the page heading (right-aligned with the role and contacts) */
+.about-name {
+  font-size: 1.9rem;
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 0 0 0.25rem;
+  text-align: right;
+  color: var(--ink);
 }

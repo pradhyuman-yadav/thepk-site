@@ -1,16 +1,17 @@
 import React, { useContext } from 'react';
+import { Sun, Moon } from '@phosphor-icons/react';
 import { ThemeContext } from '../contexts/ThemeContext';
 
 const DarkModeToggle = () => {
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);
 
   return (
-    <button 
+    <button
       className="dark-mode-toggle"
       onClick={toggleTheme}
-      aria-label="Toggle dark mode"
+      aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {isDarkMode ? '☀️' : '🌙'}
+      {isDarkMode ? <Sun size={20} weight="regular" aria-hidden="true" /> : <Moon size={20} weight="regular" aria-hidden="true" />}
     </button>
   );
 };

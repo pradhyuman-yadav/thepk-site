@@ -7,6 +7,17 @@ import {
   transformProjects,
   transformSkills
 } from '../services/cmsService';
+import { normalizeDashes } from '../utils/richTextConverter';
+
+// Apply the house dash style to every string in the About data (CMS text can contain em dashes)
+const normalizeDashesDeep = (value) => {
+  if (typeof value === 'string') return normalizeDashes(value);
+  if (Array.isArray(value)) return value.map(normalizeDashesDeep);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, normalizeDashesDeep(v)]));
+  }
+  return value;
+};
 
 // Fallback data for error scenarios
 const FALLBACK_ABOUT_DATA = {
@@ -42,7 +53,7 @@ const FALLBACK_ABOUT_DATA = {
       company: 'Tech Company',
       companyLogo: null,
       employmentType: 'Full-time',
-      period: 'Jan 2021 – Present',
+      period: 'Jan 2021 - Present',
       location: 'Bangalore, India',
       description: 'Developing web applications and maintaining cloud infrastructure',
       achievements: [
@@ -121,7 +132,7 @@ export const useAboutPage = () => {
           transformedData.skills.length > 0;
 
         if (hasData) {
-          setData(transformedData);
+          setData(normalizeDashesDeep(transformedData));
         } else {
           // Use fallback if all schemas returned empty
           console.warn('All Squidex schemas returned empty data. Using fallback.');

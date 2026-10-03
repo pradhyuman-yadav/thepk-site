@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { NAV_LINKS } from '../seo/siteMeta';
 
 const Navigation = () => {
   const location = useLocation();
@@ -6,51 +7,22 @@ const Navigation = () => {
 
   const isActive = (path) => {
     if (path === '/') return p === '/';
+    if (path === '/articles') return p === path || p.startsWith('/article/');
     return p === path || p.startsWith(path + '/');
   };
 
   return (
-    <nav className="navigation">
-      <Link to="/" className={isActive('/') ? 'active' : ''}>
-        Home
-      </Link>
-      <Link to="/articles" className={isActive('/articles') ? 'active' : ''}>
-        Articles
-      </Link>
-      <Link to="/tools" className={isActive('/tools') ? 'active' : ''}>
-        Tools
-      </Link>
-      <Link to="/about" className={isActive('/about') ? 'active' : ''}>
-        About Me
-      </Link>
-      <Link to="/llm-chat" className={isActive('/llm-chat') ? 'active' : ''}>
-        AI Chat (SLM)
-      </Link>
-      <Link to="/pipeline" className={isActive('/pipeline') ? 'active' : ''}>
-        Pipeline
-      </Link>
-      <Link to="/dc-metro" className={isActive('/dc-metro') ? 'active' : ''}>
-        DC Metro
-      </Link>
-
-      {/* External Services */}
-      <div className="nav-divider"></div>
-
-      <a href="https://home.thepk.in" className="nav-external-link" target="_blank" rel="noopener noreferrer">
-        Dashboard
-      </a>
-      <a href="https://portainer.thepk.in" className="nav-external-link" target="_blank" rel="noopener noreferrer">
-        Portainer
-      </a>
-      <a href="https://squidex.thepk.in" className="nav-external-link" target="_blank" rel="noopener noreferrer">
-        Squidex
-      </a>
-      <a href="https://n8n.thepk.in" className="nav-external-link" target="_blank" rel="noopener noreferrer">
-        n8n
-      </a>
-      <a href="https://excalidraw.thepk.in" className="nav-external-link" target="_blank" rel="noopener noreferrer">
-        Excalidraw
-      </a>
+    <nav className="navigation" aria-label="Primary">
+      {NAV_LINKS.map(({ path, label }) => (
+        <Link
+          key={path}
+          to={path}
+          className={isActive(path) ? 'active' : ''}
+          aria-current={isActive(path) ? 'page' : undefined}
+        >
+          {label}
+        </Link>
+      ))}
     </nav>
   );
 };

@@ -1,116 +1,118 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { fetchSquidexArticles } from '../services/cmsService';
-import { processArticleData } from '../utils/richTextConverter';
+import React from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { useArticles } from '../hooks/useArticles';
+import { useSeo } from '../hooks/useSeo';
+import { relatedArticles } from '../utils/categorize';
+import { formatArticleDate } from '../utils/dates';
+import { clampDescription } from '../seo/siteMeta';
+
+const ArticleSkeleton = () => (
+  <div className="article-display skeleton" aria-hidden="true">
+    <span className="skeleton-line skeleton-line--title" />
+    <span className="skeleton-line skeleton-line--title short" />
+    <span className="skeleton-line skeleton-line--meta" />
+    {[0, 1, 2, 3, 4, 5].map((i) => <span key={i} className="skeleton-line" />)}
+  </div>
+);
+
+const Breadcrumb = ({ section }) => (
+  <nav className="breadcrumb" aria-label="Breadcrumb">
+    <ol>
+      <li><Link to="/">Home</Link></li>
+      <li><Link to="/articles">Articles</Link></li>
+      {section && <li><Link to={`/articles?topic=${section.slug}`}>{section.label}</Link></li>}
+    </ol>
+  </nav>
+);
 
 const SingleArticle = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const [article, setArticle] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { articles, loading, error } = useArticles();
+  const article = articles.find((a) => a.id === id);
+  const section = article && (article.categories.find((c) => c.kind === 'topic') || article.categories[0]);
+  const related = article ? relatedArticles(article, articles) : [];
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchArticle = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const articles = await fetchSquidexArticles();
-        if (cancelled) return;
-        const found = articles.find(a => a.id === id);
-        if (!found) throw new Error('Article not found');
-        const processed = processArticleData(found);
-        if (cancelled) return;
-        setArticle(processed);
-      } catch (err) {
-        if (cancelled) return;
-        setError(err.message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    fetchArticle();
-    return () => { cancelled = true; };
-  }, [id]);
-
-  const BackBtn = () => (
-    <button className="back-btn" onClick={() => navigate('/articles')}>
-      ← Back to Articles
-    </button>
+  useSeo(
+    article
+      ? { title: article.title, description: clampDescription(article.summary), path: `/article/${article.id}`, type: 'article' }
+      : null
   );
 
   if (loading) {
     return (
       <div className="single-article-page">
-        <BackBtn />
-        <p className="state-msg">Loading article…</p>
+        <Breadcrumb />
+        <ArticleSkeleton />
       </div>
     );
   }
 
-  if (error) {
+  if (error || !article) {
     return (
       <div className="single-article-page">
-        <BackBtn />
-        <p className="state-msg">Error: {error}</p>
-      </div>
-    );
-  }
-
-  if (!article) {
-    return (
-      <div className="single-article-page">
-        <BackBtn />
-        <p className="state-msg">Article not found.</p>
+        <Breadcrumb />
+        <p className="state-msg">
+          {error ? 'This article could not be loaded right now.' : 'This article does not exist or was removed.'}{' '}
+          <Link to="/articles" className="text-link">Browse all articles</Link>
+        </p>
       </div>
     );
   }
 
   return (
     <div className="single-article-page">
-      <BackBtn />
+      <Breadcrumb section={section} />
 
       <article className="article-display">
         {article.featuredImage && (
           <figure className="article-featured-image">
-            <img src={article.featuredImage} alt={article.title} />
+            <img src={article.featuredImage} alt="" />
           </figure>
         )}
 
-        <header style={{ borderTop: 'var(--rule-thick) solid var(--ink)', paddingTop: '.75rem', marginBottom: '1.5rem' }}>
+        <header className="art-header">
           <h1 className="art-title">{article.title}</h1>
           <div className="art-meta">
-            {article.author && <span>By {article.author}</span>}
-            {article.publishDate && (
-              <time dateTime={new Date(article.publishDate).toISOString()}>
-                {new Date(article.publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </time>
-            )}
-            {article.readingTime && <span>{article.readingTime} min read</span>}
+            <span>By <Link to="/about" rel="author">{article.author}</Link></span>
+            <time dateTime={new Date(article.publishDate).toISOString()}>{formatArticleDate(article.publishDate)}</time>
+            <span>{article.readingTime} min read</span>
           </div>
           {article.excerpt && <p className="art-excerpt">{article.excerpt}</p>}
         </header>
 
         <div className="art-body article-content" dangerouslySetInnerHTML={{ __html: article.content }} />
 
-        <footer style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-          {article.tags && article.tags.length > 0 && (
-            <div className="article-card-tags">
-              {article.tags.map((tag, i) => (
-                <span key={i} className="art-tag">{tag}</span>
-              ))}
-            </div>
-          )}
+        <footer className="art-footer">
+          <p className="art-filed">
+            Filed under{' '}
+            {article.categories.map((c, i) => (
+              <React.Fragment key={c.slug}>
+                {i > 0 && ', '}
+                <Link to={`/articles?topic=${c.slug}`} className="text-link">{c.label}</Link>
+              </React.Fragment>
+            ))}
+          </p>
           {article.lastModified && (
-            <p style={{ marginTop: '.75rem', fontSize: '.78rem', fontStyle: 'italic', opacity: '.65' }}>
-              Last updated: {new Date(article.lastModified).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
+            <p className="art-updated">Last updated {formatArticleDate(article.lastModified)}</p>
           )}
         </footer>
       </article>
+
+      {related.length > 0 && (
+        <section className="related-articles" aria-labelledby="related-heading">
+          <h2 id="related-heading" className="section-heading">Related articles</h2>
+          <ul className="home-more">
+            {related.map((a) => (
+              <li key={a.id} className="home-more-item">
+                <Link to={`/article/${a.id}`} className="home-more-title">{a.title}</Link>
+                <time dateTime={new Date(a.publishDate).toISOString()} className="home-more-date">
+                  {formatArticleDate(a.publishDate)}
+                </time>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 };

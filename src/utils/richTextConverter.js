@@ -4,6 +4,9 @@
  * content objects to properly formatted HTML
  */
 
+import { SQUIDEX_URL, SQUIDEX_APP_NAME } from '../services/squidexClient.js';
+import { categorizeArticle } from './categorize.js';
+
 /**
  * Converts a rich text content object to HTML string
  * @param {Object|String} contentObj - The rich text object or string to convert
@@ -159,15 +162,11 @@ const convertAssetToUrl = (assetData) => {
 
   // If it's an object with ID property
   if (typeof assetData === 'object' && assetData?.id) {
-    const SQUIDEX_URL = import.meta.env.VITE_SQUIDEX_URL || 'https://squidex.thepk.in';
-    const SQUIDEX_APP_NAME = 'platform';
     return `${SQUIDEX_URL}/api/assets/${SQUIDEX_APP_NAME}/${assetData.id}`;
   }
 
   // If it's just an asset ID string
   if (typeof assetData === 'string') {
-    const SQUIDEX_URL = import.meta.env.VITE_SQUIDEX_URL || 'https://squidex.thepk.in';
-    const SQUIDEX_APP_NAME = 'platform';
     return `${SQUIDEX_URL}/api/assets/${SQUIDEX_APP_NAME}/${assetData}`;
   }
 
@@ -180,23 +179,81 @@ const convertAssetToUrl = (assetData) => {
  * @returns {Object} Processed article with converted content
  */
 export const processArticleData = (rawArticle) => {
+  const content = normalizeDashes(convertRichTextToHTML(rawArticle.data?.content?.iv)) || 'No content available';
+  const title = normalizeDashes(rawArticle.data?.title?.iv) || 'Untitled';
+  const excerpt = normalizeDashes(rawArticle.data?.excerpt?.iv || '');
+  const tags = [rawArticle.data?.tags?.iv || []].flat(2).filter((t) => typeof t === 'string' && t.trim());
+  const text = htmlToPlainText(content);
+
   return {
     id: rawArticle.id,
-    title: rawArticle.data?.title?.iv || 'Untitled',
-    content: convertRichTextToHTML(rawArticle.data?.content?.iv) || 'No content available',
-    excerpt: rawArticle.data?.excerpt?.iv || '',
+    title,
+    content,
+    excerpt,
+    // Excerpt when the CMS has one, otherwise the opening of the article. Used for cards and meta descriptions.
+    summary: excerpt || truncateWords(text, 32),
     author: rawArticle.data?.author?.iv || 'Unknown',
     publishDate: rawArticle.data?.publishDate?.iv || rawArticle.lastModified || rawArticle.created,
     slug: rawArticle.data?.slug?.iv || '',
-    tags: rawArticle.data?.tags?.iv || [],
+    tags,
+    categories: categorizeArticle({ title, text, tags }),
     featuredImage: convertAssetToUrl(rawArticle.data?.featuredImage?.iv),
     status: rawArticle.data?.status?.iv || rawArticle.status || 'draft',
     created: rawArticle.created,
     lastModified: rawArticle.lastModified,
     // Additional metadata for complete display
-    wordCount: countWords(convertRichTextToHTML(rawArticle.data?.content?.iv) || ''),
-    readingTime: estimateReadingTime(convertRichTextToHTML(rawArticle.data?.content?.iv) || '')
+    wordCount: countWords(content),
+    readingTime: estimateReadingTime(content)
   };
+};
+
+/**
+ * Process and sort a list of raw articles, newest first.
+ * @param {Array} rawArticles - Raw items from the Squidex blog schema
+ * @returns {Array} Processed articles
+ */
+export const processArticleList = (rawArticles) =>
+  rawArticles
+    .map(processArticleData)
+    .sort((a, b) => new Date(b.publishDate) - new Date(a.publishDate));
+
+/**
+ * Replace em and en dashes with a plain hyphen (house style bans them in visible text).
+ * @param {String} value - Text or HTML
+ * @returns {String} Normalized text
+ */
+export const normalizeDashes = (value) =>
+  typeof value === 'string'
+    ? value.replace(/\s*[\u2014\u2015]\s*/g, ' - ').replace(/\u2013/g, '-')
+    : value;
+
+/**
+ * Strip tags and decode the common entities to get readable plain text.
+ * @param {String} html - HTML string
+ * @returns {String} Plain text
+ */
+export const htmlToPlainText = (html) =>
+  (html || '')
+    .replace(/<\/(p|h[1-6]|li|blockquote|pre)>/gi, ' ')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+
+/**
+ * Cut text to a word limit, adding an ellipsis when shortened.
+ * @param {String} text - Plain text
+ * @param {Number} limit - Max words
+ * @returns {String} Shortened text
+ */
+export const truncateWords = (text, limit) => {
+  const words = (text || '').split(/\s+/).filter(Boolean);
+  return words.length <= limit ? words.join(' ') : `${words.slice(0, limit).join(' ').replace(/[,.;:]$/, '')}...`;
 };
 
 /**
@@ -224,6 +281,7 @@ export default {
   convertRichTextToHTML,
   convertNodeToHTML,
   processArticleData,
+  processArticleList,
   countWords,
   estimateReadingTime
 };

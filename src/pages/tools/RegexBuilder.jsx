@@ -439,7 +439,7 @@ const RegexBuilder = () => {
           {/* Save Button */}
           {pattern && (
             <button className="save-regex-button" onClick={saveRegex}>
-              💾 Save Pattern
+              Save Pattern
             </button>
           )}
         </div>

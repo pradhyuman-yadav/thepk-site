@@ -301,7 +301,7 @@ const Base64Converter = () => {
                         Copy Output
                       </button>
                       <button className="save-button" onClick={saveConversion}>
-                        💾 Save Conversion
+                        Save Conversion
                       </button>
                     </div>
                   </div>

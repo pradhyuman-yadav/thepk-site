@@ -23,6 +23,7 @@ const About = () => {
             <div className="initials-avatar">PY</div>
           )}
           <div className="profile-info">
+            <h1 className="about-name">{about.name || 'Pradhyuman Yadav'}</h1>
             {about.currentRole && <h3 className="current-role">{about.currentRole}</h3>}
             <div className="profile-contacts">
               {about.location && <span className="profile-contact">{about.location}</span>}
@@ -72,10 +73,10 @@ const About = () => {
                   {edu.degree}{edu.fieldOfStudy ? ` in ${edu.fieldOfStudy}` : ''}
                 </h3>
                 <div className="edu-school">
-                  {edu.institution}{edu.location ? ` — ${edu.location}` : ''}
+                  {edu.institution}{edu.location ? `, ${edu.location}` : ''}
                 </div>
                 {edu.startDate && edu.endDate && (
-                  <div className="edu-dates">{edu.startDate} – {edu.endDate}</div>
+                  <div className="edu-dates">{edu.startDate} - {edu.endDate}</div>
                 )}
                 {edu.gpa && <div className="edu-dates">GPA: {edu.gpa}</div>}
                 {edu.relevantCoursework && edu.relevantCoursework.length > 0 && (
@@ -105,7 +106,7 @@ const About = () => {
                   {job.period && <span className="exp-period">{job.period}</span>}
                 </div>
                 <div className="exp-company">
-                  {job.company}{job.location ? ` — ${job.location}` : ''}
+                  {job.company}{job.location ? `, ${job.location}` : ''}
                   {job.employmentType ? ` · ${job.employmentType}` : ''}
                 </div>
                 {job.description && <p className="exp-desc">{job.description}</p>}
@@ -137,7 +138,7 @@ const About = () => {
                   <span className="proj-name">{project.title}</span>
                   {project.category && <span className="badge-cat">{project.category}</span>}
                   {project.startDate && project.endDate && (
-                    <span className="proj-period">{project.startDate} – {project.endDate}</span>
+                    <span className="proj-period">{project.startDate} - {project.endDate}</span>
                   )}
                 </div>
                 {project.shortDescription && (

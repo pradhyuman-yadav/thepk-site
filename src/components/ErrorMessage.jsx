@@ -7,7 +7,7 @@ const ErrorMessage = ({ message = 'An error occurred while loading content' }) =
   return (
     <div className="error-message-container">
       <div className="error-message">
-        <h3>⚠️ Error</h3>
+        <h3>Error</h3>
         <p>{message}</p>
         <p className="error-note">Using fallback data to ensure the page still displays.</p>
       </div>

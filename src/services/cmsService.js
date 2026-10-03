@@ -1,78 +1,11 @@
 import { useState, useEffect } from 'react';
-
-// Squidex configuration - Update these with your actual values
-const SQUIDEX_APP_NAME = 'platform'; // Fixed to use correct app name
-const SQUIDEX_CLIENT_ID = import.meta.env.VITE_SQUIDEX_CLIENT_ID || 'platform:platform-cms';
-const SQUIDEX_CLIENT_SECRET = import.meta.env.VITE_SQUIDEX_CLIENT_SECRET || '4tcz1yi7yusapvyyuqfiqjdodgkqxiiyoxafkcyapkgx';
-const SQUIDEX_URL = import.meta.env.VITE_SQUIDEX_URL || 'https://squidex.thepk.in';
-
-// In-memory token cache
-let _tokenCache = null;
-let _tokenExpiry = 0;
-
-// Get access token from Squidex (cached)
-const getSquidexToken = async () => {
-  const now = Date.now();
-  if (_tokenCache && now < _tokenExpiry) return _tokenCache;
-
-  try {
-    const tokenUrl = `${SQUIDEX_URL}/identity-server/connect/token`;
-
-    const response = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: SQUIDEX_CLIENT_ID,
-        client_secret: SQUIDEX_CLIENT_SECRET,
-        scope: 'squidex-api',
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to get access token: ${response.status} ${response.statusText}. Response: ${errorText}`);
-    }
-
-    const data = await response.json();
-    _tokenCache = data.access_token;
-    _tokenExpiry = now + (data.expires_in - 60) * 1000;
-    return _tokenCache;
-  } catch (error) {
-    console.error('Error getting Squidex token:', error);
-    throw error;
-  }
-};
-
-// Fetch articles from Squidex
-const fetchSquidexArticles = async () => {
-  try {
-    const token = await getSquidexToken();
-    
-    // Try the regular API first, then fallback to flat if needed
-    const apiUrl = `${SQUIDEX_URL}/api/content/${SQUIDEX_APP_NAME}/blog`;
-    
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to fetch articles: ${response.status} ${response.statusText}. Response: ${errorText}`);
-    }
-
-    const data = await response.json();
-    return data.items || [];
-  } catch (error) {
-    console.error('Error fetching articles:', error);
-    throw error;
-  }
-};
+import {
+  SQUIDEX_APP_NAME,
+  SQUIDEX_CLIENT_ID,
+  SQUIDEX_URL,
+  getSquidexToken,
+  fetchSquidexArticles,
+} from './squidexClient';
 
 export const useCMS = () => {
   const [latestArticle, setLatestArticle] = useState(null);
@@ -396,12 +329,12 @@ export const formatDate = (dateString) => {
  * Format a date range for display
  * @param {String} startDate - Start date ISO string
  * @param {String} endDate - End date ISO string or "Present"
- * @returns {String} Formatted date range (e.g., "July 2025 – Present")
+ * @returns {String} Formatted date range (e.g., "July 2025 - Present")
  */
 export const formatDateRange = (startDate, endDate) => {
   const start = formatDate(startDate);
   const end = (endDate === 'Present' || !endDate) ? 'Present' : formatDate(endDate);
-  return `${start} – ${end}`;
+  return `${start} - ${end}`;
 };
 
 /**

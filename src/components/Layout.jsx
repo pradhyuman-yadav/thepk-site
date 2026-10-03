@@ -40,8 +40,9 @@ const Layout = ({ children }) => {
       </div>
 
       {/* Right sidebar - Name branding */}
+      {/* Brand wordmark, not a heading: each page owns its single <h1> */}
       <div className="name-branding">
-        <h1 className="site-title-vertical">Pradhyuman Yadav</h1>
+        <p className="site-title-vertical">Pradhyuman Yadav</p>
       </div>
     </div>
   );

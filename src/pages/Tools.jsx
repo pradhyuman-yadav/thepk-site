@@ -68,7 +68,7 @@ const Tools = () => {
                 <span className={statusBadgeClass(project.status)}>{project.status}</span>
                 <span className="badge-cat">{project.category}</span>
                 <span className="proj-period">
-                  {project.startDate}{project.endDate ? ` – ${project.endDate}` : ' onwards'}
+                  {project.startDate}{project.endDate ? ` - ${project.endDate}` : ' onwards'}
                 </span>
               </div>
               <p className="proj-desc">{project.description}</p>
