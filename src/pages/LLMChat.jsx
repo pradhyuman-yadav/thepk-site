@@ -210,7 +210,7 @@ const LLMChat = () => {
           </div>
 
           <div className="chat-sidebar-section">
-            <h3 className="chat-sidebar-heading">MLOps Skills</h3>
+            <h2 className="chat-sidebar-heading">MLOps Skills</h2>
             <ul className="chat-sidebar-list">
               <li>Model serving &amp; inference optimization</li>
               <li>Streaming &amp; non-streaming responses</li>
@@ -220,7 +220,7 @@ const LLMChat = () => {
           </div>
 
           <div className="chat-sidebar-section">
-            <h3 className="chat-sidebar-heading">Hardware</h3>
+            <h2 className="chat-sidebar-heading">Hardware</h2>
             <p className="chat-sidebar-body">AZW MINI S Mini PC</p>
             <ul className="chat-sidebar-list">
               <li><strong>CPU:</strong> Intel N150 (4c, 3.6 GHz)</li>

@@ -88,7 +88,7 @@ const QRGenerator = () => {
             </div>
 
             <div className="examples">
-              <h3>Examples:</h3>
+              <h2>Examples:</h2>
               <div className="example-buttons">
                 {examples.map((example, index) => (
                   <button
@@ -155,7 +155,7 @@ const QRGenerator = () => {
         </div>
 
         <div className="tool-info">
-          <h3>QR Code Types</h3>
+          <h2>QR Code Types</h2>
           <ul>
             <li><strong>URL:</strong> Direct links to websites</li>
             <li><strong>Text:</strong> Plain text messages</li>

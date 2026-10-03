@@ -197,7 +197,7 @@ const CodeFormatter = () => {
         </div>
 
         <div className="tool-info">
-          <h3>Supported Languages</h3>
+          <h2>Supported Languages</h2>
           <ul>
             <li><strong>JavaScript:</strong> Adds proper indentation and line breaks</li>
             <li><strong>Python:</strong> Cleans up whitespace and formatting</li>

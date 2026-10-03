@@ -1,8 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-
-const ThemeContext = createContext();
-
-export const useTheme = () => useContext(ThemeContext);
+import React, { useState, useEffect } from 'react';
+import { ThemeContext } from './theme';
 
 const readSaved = () => {
   try {
@@ -52,5 +49,3 @@ export const ThemeProvider = ({ children }) => {
     </ThemeContext.Provider>
   );
 };
-
-export { ThemeContext };

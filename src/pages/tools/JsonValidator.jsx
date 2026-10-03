@@ -40,7 +40,7 @@ const JsonValidator = () => {
     try {
       const parsed = JSON.parse(jsonInput);
       setFormattedJson(JSON.stringify(parsed));
-    } catch (error) {
+    } catch {
       alert('Please fix JSON errors before minifying');
     }
   };
@@ -103,7 +103,7 @@ const JsonValidator = () => {
             />
             
             <div className="examples">
-              <h3>Examples:</h3>
+              <h2>Examples:</h2>
               <div className="example-buttons">
                 {examples.map((example, index) => (
                   <button
@@ -175,7 +175,7 @@ const JsonValidator = () => {
         </div>
 
         <div className="tool-info">
-          <h3>JSON Validation Features</h3>
+          <h2>JSON Validation Features</h2>
           <ul>
             <li><strong>Syntax Validation:</strong> Check for proper JSON syntax</li>
             <li><strong>Error Reporting:</strong> Detailed error messages with line numbers</li>

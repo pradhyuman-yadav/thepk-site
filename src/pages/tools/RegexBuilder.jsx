@@ -199,7 +199,7 @@ const RegexBuilder = () => {
         <div className="regex-builder-container">
           {/* Pattern Input */}
           <div className="pattern-section">
-            <h3>Regex Pattern</h3>
+            <h2>Regex Pattern</h2>
             <div className="pattern-input-group">
               <span className="pattern-prefix">/</span>
               <input
@@ -418,7 +418,7 @@ const RegexBuilder = () => {
                 <div className="examples-grid">
                   {examples.map((example, index) => (
                     <div key={index} className="example-card">
-                      <h4>{example.name}</h4>
+                      <h3>{example.name}</h3>
                       <code className="example-pattern">{example.pattern}</code>
                       <p className="example-test">
                         <strong>Test:</strong> {example.testString}
@@ -445,7 +445,7 @@ const RegexBuilder = () => {
         </div>
 
         <div className="tool-info">
-          <h3>Regex Builder Features</h3>
+          <h2>Regex Builder Features</h2>
           <ul>
             <li><strong>Live Testing:</strong> Test patterns against strings in real-time</li>
             <li><strong>Match Visualization:</strong> See all matches with positions and groups</li>
@@ -459,10 +459,10 @@ const RegexBuilder = () => {
         </div>
 
         <div className="regex-cheatsheet">
-          <h3>Regex Cheatsheet</h3>
+          <h2>Regex Cheatsheet</h2>
           <div className="cheatsheet-grid">
             <div className="cheatsheet-category">
-              <h4>Character Classes</h4>
+              <h3>Character Classes</h3>
               <ul>
                 <li><code>.</code> - Any character except newline</li>
                 <li><code>[abc]</code> - a, b, or c</li>
@@ -474,7 +474,7 @@ const RegexBuilder = () => {
               </ul>
             </div>
             <div className="cheatsheet-category">
-              <h4>Quantifiers</h4>
+              <h3>Quantifiers</h3>
               <ul>
                 <li><code>*</code> - 0 or more</li>
                 <li><code>+</code> - 1 or more</li>
@@ -485,7 +485,7 @@ const RegexBuilder = () => {
               </ul>
             </div>
             <div className="cheatsheet-category">
-              <h4>Anchors & Boundaries</h4>
+              <h3>Anchors & Boundaries</h3>
               <ul>
                 <li><code>^</code> - Start of string</li>
                 <li><code>$</code> - End of string</li>
@@ -494,7 +494,7 @@ const RegexBuilder = () => {
               </ul>
             </div>
             <div className="cheatsheet-category">
-              <h4>Groups & Alternation</h4>
+              <h3>Groups & Alternation</h3>
               <ul>
                 <li><code>(abc)</code> - Capture group</li>
                 <li><code>(?:abc)</code> - Non-capture group</li>

@@ -203,7 +203,7 @@ const PasswordGenerator = () => {
         </div>
 
         <div className="tool-info">
-          <h3>Password Security Tips</h3>
+          <h2>Password Security Tips</h2>
           <ul>
             <li><strong>Length:</strong> Use at least 12 characters for better security</li>
             <li><strong>Variety:</strong> Include uppercase, lowercase, numbers, and symbols</li>

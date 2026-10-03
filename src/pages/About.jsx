@@ -24,7 +24,7 @@ const About = () => {
           )}
           <div className="profile-info">
             <h1 className="about-name">{about.name || 'Pradhyuman Yadav'}</h1>
-            {about.currentRole && <h3 className="current-role">{about.currentRole}</h3>}
+            {about.currentRole && <p className="current-role">{about.currentRole}</p>}
             <div className="profile-contacts">
               {about.location && <span className="profile-contact">{about.location}</span>}
               {about.phone && (

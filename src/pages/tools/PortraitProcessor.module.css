@@ -99,7 +99,7 @@
 
 .fileInfo {
   font-size: 0.9rem;
-  color: #999;
+  color: #595959;
   margin: 0;
 }
 
@@ -415,7 +415,7 @@
   }
 
   .fileInfo {
-    color: #888;
+    color: #b0b0b0;
   }
 
   .controlGroup label {

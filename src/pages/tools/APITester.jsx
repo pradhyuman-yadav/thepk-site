@@ -94,7 +94,7 @@ const APITester = () => {
       if (['POST', 'PUT', 'PATCH'].includes(method) && body.trim()) {
         try {
           requestOptions.body = body;
-        } catch (e) {
+        } catch {
           setError('Invalid request body');
           setLoading(false);
           return;
@@ -243,6 +243,7 @@ const APITester = () => {
                 value={method}
                 onChange={(e) => setMethod(e.target.value)}
                 className="method-select"
+                aria-label="HTTP method"
               >
                 <option value="GET">GET</option>
                 <option value="POST">POST</option>

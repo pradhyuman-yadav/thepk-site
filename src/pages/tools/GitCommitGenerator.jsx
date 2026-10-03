@@ -77,7 +77,7 @@ const GitCommitGenerator = () => {
             />
             
             <div className="examples">
-              <h3>Examples:</h3>
+              <h2>Examples:</h2>
               <div className="example-tags">
                 {examples.map((example, index) => (
                   <button
@@ -132,7 +132,7 @@ const GitCommitGenerator = () => {
         </div>
 
         <div className="tool-info">
-          <h3>Conventional Commit Format</h3>
+          <h2>Conventional Commit Format</h2>
           <p>
             This tool generates commit messages following the conventional commit specification:
           </p>

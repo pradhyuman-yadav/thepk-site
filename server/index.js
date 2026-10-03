@@ -6,7 +6,7 @@
  */
 
 import http from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
@@ -14,7 +14,7 @@ import zlib from 'node:zlib';
 import { fetchSquidexArticles } from '../src/services/squidexClient.js';
 import { processArticleList } from '../src/utils/richTextConverter.js';
 import { SITE_URL } from '../src/seo/siteMeta.js';
-import { renderPage, renderRobots, renderSitemap, renderRss, renderLlmsTxt } from './render.js';
+import { renderPage, renderRobots, renderSitemap, renderRss, renderLlmsTxt, initialDataScript } from './render.js';
 
 const PORT = Number(process.env.PORT) || 3001;
 const DIST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../dist');
@@ -34,10 +34,19 @@ const MIME = {
   '.json': 'application/json; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8',
   '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
 };
 const COMPRESSIBLE = /^(text\/|application\/(json|xml|rss\+xml)|image\/svg)/;
 
-const template = await readFile(path.join(DIST, 'index.html'), 'utf8');
+// Preload the headline weights so text does not reflow when the display face arrives (avoids layout shift)
+const fontPreloads = (await readdir(path.join(DIST, 'assets')))
+  .filter((name) => /^playfair-display-latin-(700|900)-normal-.*\.woff2$/.test(name))
+  .map((name) => `<link rel="preload" href="/assets/${name}" as="font" type="font/woff2" crossorigin />`)
+  .join('\n    ');
+const template = (await readFile(path.join(DIST, 'index.html'), 'utf8')).replace(
+  '<!--seo-head-->',
+  `${fontPreloads}\n    <!--seo-head-->`
+);
 
 // Articles are cached in memory; on a CMS failure the last good copy keeps being served.
 let articleCache = { at: 0, list: [] };
@@ -140,7 +149,7 @@ const handle = async (req, res) => {
   const articles = await getArticles();
   const page = renderPage({ path: pathname, searchParams: url.searchParams, articles });
   const html = template
-    .replace(/<!--seo-head-->[\s\S]*?<!--\/seo-head-->/, page.head)
+    .replace(/<!--seo-head-->[\s\S]*?<!--\/seo-head-->/, `${page.head}\n    ${initialDataScript(articles, pathname)}`)
     .replace('<!--seo-body-->', page.body);
   send(req, res, page.status, html, MIME['.html'], { 'Cache-Control': 'no-cache' });
 };

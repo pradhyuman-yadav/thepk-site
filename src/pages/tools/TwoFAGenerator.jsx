@@ -6,7 +6,6 @@ const TwoFAGenerator = () => {
   const [secret, setSecret] = useState('');
   const [code, setCode] = useState('');
   const [timeLeft, setTimeLeft] = useState(30);
-  const [isGenerating, setIsGenerating] = useState(false);
 
   // Generate TOTP code
   const generateTOTP = (secretKey) => {
@@ -121,7 +120,7 @@ const TwoFAGenerator = () => {
             </div>
 
             <div className="examples">
-              <h3>Example Secrets:</h3>
+              <h2>Example Secrets:</h2>
               <div className="example-buttons">
                 {examples.map((example, index) => (
                   <button
@@ -161,7 +160,7 @@ const TwoFAGenerator = () => {
         </div>
 
         <div className="tool-info">
-          <h3>How 2FA Works</h3>
+          <h2>How 2FA Works</h2>
           <ul>
             <li><strong>TOTP Algorithm:</strong> Time-based One-Time Password using HMAC-SHA1</li>
             <li><strong>30-Second Window:</strong> Codes refresh every 30 seconds</li>

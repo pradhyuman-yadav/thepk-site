@@ -36,11 +36,12 @@ export const convertNodeToHTML = (node) => {
   if (!node || !node.type) return '';
 
   switch (node.type) {
-    case 'paragraph':
+    case 'paragraph': {
       const paragraphContent = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       return `<p>${paragraphContent}</p>`;
+    }
 
-    case 'text':
+    case 'text': {
       let text = node.text || '';
       if (node.marks) {
         node.marks.forEach(mark => {
@@ -67,25 +68,30 @@ export const convertNodeToHTML = (node) => {
         });
       }
       return text;
+    }
 
-    case 'bulletList':
+    case 'bulletList': {
       const listItems = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       return `<ul>${listItems}</ul>`;
+    }
 
-    case 'orderedList':
+    case 'orderedList': {
       const orderedItems = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       return `<ol>${orderedItems}</ol>`;
+    }
 
-    case 'listItem':
+    case 'listItem': {
       const itemContent = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       return `<li>${itemContent}</li>`;
+    }
 
-    case 'heading':
+    case 'heading': {
       const headingContent = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       const level = node.attrs?.level || 1;
       return `<h${level}>${headingContent}</h${level}>`;
+    }
 
-    case 'image':
+    case 'image': {
       const imageSrc = node.attrs?.src || '';
       const imageAlt = node.attrs?.alt || '';
       const imageTitle = node.attrs?.title || '';
@@ -100,37 +106,44 @@ export const convertNodeToHTML = (node) => {
       }
 
       return `<img src="${imageSrc}" alt="${imageAlt}" title="${imageTitle}" style="${imageStyle}" />`;
+    }
 
     case 'hardBreak':
       return '<br>';
 
-    case 'codeBlock':
+    case 'codeBlock': {
       const codeContent = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       const language = node.attrs?.language || '';
       return `<pre><code class="language-${language}">${codeContent}</code></pre>`;
+    }
 
-    case 'blockquote':
+    case 'blockquote': {
       const quoteContent = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       return `<blockquote>${quoteContent}</blockquote>`;
+    }
 
     case 'horizontalRule':
       return '<hr>';
 
-    case 'table':
+    case 'table': {
       const tableContent = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       return `<table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">${tableContent}</table>`;
+    }
 
-    case 'tableRow':
+    case 'tableRow': {
       const rowContent = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       return `<tr>${rowContent}</tr>`;
+    }
 
-    case 'tableCell':
+    case 'tableCell': {
       const cellContent = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       return `<td style="border: 1px solid var(--border-color); padding: 0.5rem;">${cellContent}</td>`;
+    }
 
-    case 'tableHeader':
+    case 'tableHeader': {
       const headerContent = node.content ? node.content.map(convertNodeToHTML).join('') : '';
       return `<th style="border: 1px solid var(--border-color); padding: 0.5rem; font-weight: bold;">${headerContent}</th>`;
+    }
 
     default:
       // Handle unknown node types gracefully

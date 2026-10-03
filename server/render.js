@@ -32,8 +32,24 @@ const esc = (value) =>
 const xmlEsc = (value) => esc(value).replace(/&#39;/g, '&apos;');
 
 // JSON inside <script> must not be able to close the tag.
-const jsonLd = (data) =>
-  `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+const safeJson = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+const jsonLd = (data) => `<script type="application/ld+json">${safeJson(data)}</script>`;
+
+const LITE_FIELDS = ['id', 'title', 'excerpt', 'summary', 'author', 'publishDate', 'lastModified', 'created', 'readingTime', 'wordCount', 'categories', 'featuredImage', 'tags'];
+
+/**
+ * Inline article data so the app renders the first page without waiting for a CMS round trip.
+ * Every article ships without its body except the one being viewed; useArticles fills the rest in the background.
+ */
+export const initialDataScript = (articles, path) => {
+  const viewing = path.match(/^\/article\/([^/]+)$/)?.[1];
+  const lite = articles.map((a) => {
+    const item = Object.fromEntries(LITE_FIELDS.map((k) => [k, a[k]]));
+    if (a.id === viewing) item.content = a.content;
+    return item;
+  });
+  return `<script>window.__INITIAL_ARTICLES__=${safeJson(lite)};</script>`;
+};
 
 const articlePath = (a) => `/article/${a.id}`;
 const topicPath = (slug) => `/articles?topic=${encodeURIComponent(slug)}`;

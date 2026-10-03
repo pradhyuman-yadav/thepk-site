@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { Sun, Moon } from '@phosphor-icons/react';
-import { ThemeContext } from '../contexts/ThemeContext';
+import { ThemeContext } from '../contexts/theme';
 
 const DarkModeToggle = () => {
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);

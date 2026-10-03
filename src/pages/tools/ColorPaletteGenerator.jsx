@@ -373,7 +373,7 @@ const ColorPaletteGenerator = () => {
           {colors.length > 0 && (
             <div className="palette-display">
               <div className="palette-type-info">
-                <h3>{paletteType.charAt(0).toUpperCase() + paletteType.slice(1).replace('-', ' ')}</h3>
+                <h2>{paletteType.charAt(0).toUpperCase() + paletteType.slice(1).replace('-', ' ')}</h2>
                 <p>{getPaletteDescription()}</p>
               </div>
 
@@ -401,7 +401,7 @@ const ColorPaletteGenerator = () => {
               </div>
 
               <div className="export-section">
-                <h3>Export Palette</h3>
+                <h2>Export Palette</h2>
                 <div className="export-buttons">
                   <button
                     className="export-button css-export"
@@ -428,7 +428,7 @@ const ColorPaletteGenerator = () => {
         </div>
 
         <div className="tool-info">
-          <h3>Color Theory Explained</h3>
+          <h2>Color Theory Explained</h2>
           <ul>
             <li><strong>Complementary:</strong> Colors opposite on the color wheel create high contrast and visual excitement</li>
             <li><strong>Analogous:</strong> Colors adjacent to each other create harmony and are easy on the eyes</li>

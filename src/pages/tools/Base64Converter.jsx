@@ -6,7 +6,6 @@ const Base64Converter = () => {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [mode, setMode] = useState('encode');
-  const [outputType, setOutputType] = useState('text');
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('converter');
   const [savedConversions, setSavedConversions] = useState(
@@ -23,7 +22,7 @@ const Base64Converter = () => {
       const encoded = btoa(unescape(encodeURIComponent(input)));
       setOutput(encoded);
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Failed to encode. Please check your input.');
     }
   };
@@ -38,7 +37,7 @@ const Base64Converter = () => {
       const decoded = decodeURIComponent(escape(atob(input)));
       setOutput(decoded);
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Invalid Base64 format. Please check your input.');
     }
   };
@@ -56,7 +55,7 @@ const Base64Converter = () => {
         .replace(/=/g, '');
       setOutput(encoded);
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Failed to encode. Please check your input.');
     }
   };
@@ -76,7 +75,7 @@ const Base64Converter = () => {
       const decoded = decodeURIComponent(escape(atob(base64)));
       setOutput(decoded);
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Invalid URL-safe Base64 format. Please check your input.');
     }
   };
@@ -91,7 +90,7 @@ const Base64Converter = () => {
         const base64String = event.target.result;
         setOutput(base64String);
         setError(null);
-      } catch (err) {
+      } catch {
         setError('Failed to encode image.');
       }
     };
@@ -111,7 +110,7 @@ const Base64Converter = () => {
       }
       setOutput(input);
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Failed to process image data.');
     }
   };
@@ -206,7 +205,7 @@ const Base64Converter = () => {
         <div className="base64-converter-container">
           {/* Mode Selection */}
           <div className="mode-selector">
-            <h3>Conversion Mode</h3>
+            <h2>Conversion Mode</h2>
             <div className="mode-buttons">
               <button
                 className={`mode-button ${mode === 'encode' ? 'active' : ''}`}
@@ -308,7 +307,7 @@ const Base64Converter = () => {
                 )}
 
                 <div className="info-box">
-                  <h4>Mode Information:</h4>
+                  <h3>Mode Information:</h3>
                   {mode === 'encode' && (
                     <p><strong>Encode Text:</strong> Converts regular text to Base64 format. Supports Unicode characters.</p>
                   )}
@@ -328,7 +327,7 @@ const Base64Converter = () => {
             {activeTab === 'image' && (
               <div className="image-section">
                 <div className="image-converter-area">
-                  <h3>Image to Base64</h3>
+                  <h2>Image to Base64</h2>
                   <div className="file-input-wrapper">
                     <label htmlFor="image-input">Select Image:</label>
                     <input
@@ -373,7 +372,7 @@ const Base64Converter = () => {
                 </div>
 
                 <div className="base64-to-image">
-                  <h3>Base64 to Image</h3>
+                  <h2>Base64 to Image</h2>
                   <label htmlFor="base64-input">Paste Base64 Image Data:</label>
                   <textarea
                     id="base64-input"
@@ -440,7 +439,7 @@ const Base64Converter = () => {
         </div>
 
         <div className="tool-info">
-          <h3>Base64 Converter Features</h3>
+          <h2>Base64 Converter Features</h2>
           <ul>
             <li><strong>Text Encoding/Decoding:</strong> Convert text to and from standard Base64</li>
             <li><strong>URL-Safe Encoding:</strong> Create Base64 suitable for use in URLs and filenames</li>
@@ -454,13 +453,13 @@ const Base64Converter = () => {
         </div>
 
         <div className="base64-guide">
-          <h3>What is Base64?</h3>
+          <h2>What is Base64?</h2>
           <p>
             Base64 is a binary-to-text encoding scheme that represents binary data in an ASCII string format.
             It uses 64 printable ASCII characters to encode data, making it safe for transmission over text-based protocols.
           </p>
 
-          <h4>Use Cases:</h4>
+          <h3>Use Cases:</h3>
           <ul>
             <li><strong>Email Attachments:</strong> Email systems traditionally only support ASCII text, so attachments are Base64 encoded</li>
             <li><strong>Data URLs:</strong> Embedding images directly in HTML/CSS without separate file requests</li>
@@ -470,10 +469,10 @@ const Base64Converter = () => {
             <li><strong>Web Authentication:</strong> Basic authentication credentials are Base64 encoded</li>
           </ul>
 
-          <h4>Base64 Character Set:</h4>
+          <h3>Base64 Character Set:</h3>
           <p><code>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=</code></p>
 
-          <h4>Standard vs URL-Safe Base64:</h4>
+          <h3>Standard vs URL-Safe Base64:</h3>
           <ul>
             <li><strong>Standard:</strong> Uses +, /, and = characters</li>
             <li><strong>URL-Safe:</strong> Replaces + with -, / with _, and removes padding (=)</li>

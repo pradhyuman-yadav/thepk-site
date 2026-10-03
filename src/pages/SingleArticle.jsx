@@ -27,7 +27,7 @@ const Breadcrumb = ({ section }) => (
 
 const SingleArticle = () => {
   const { id } = useParams();
-  const { articles, loading, error } = useArticles();
+  const { articles, loading, error, complete } = useArticles();
   const article = articles.find((a) => a.id === id);
   const section = article && (article.categories.find((c) => c.kind === 'topic') || article.categories[0]);
   const related = article ? relatedArticles(article, articles) : [];
@@ -38,7 +38,8 @@ const SingleArticle = () => {
       : null
   );
 
-  if (loading) {
+  // Wait for the body when only the inlined list (without bodies) has arrived so far
+  if (loading || (!complete && (!article || !article.content))) {
     return (
       <div className="single-article-page">
         <Breadcrumb />
