@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useArticles } from '../hooks/useArticles';
 import { useSeo } from '../hooks/useSeo';
@@ -31,6 +31,9 @@ const SingleArticle = () => {
   const article = articles.find((a) => a.id === id);
   const section = article && (article.categories.find((c) => c.kind === 'topic') || article.categories[0]);
   const related = article ? relatedArticles(article, articles) : [];
+  // Stable object: React 19 rewrites innerHTML whenever a new dangerouslySetInnerHTML object arrives,
+  // even with identical HTML, which would re-run the wipe and delay LCP when the full list loads
+  const bodyHtml = useMemo(() => ({ __html: article?.content || '' }), [article?.content]);
 
   useSeo(
     article
@@ -81,7 +84,7 @@ const SingleArticle = () => {
           {article.excerpt && <p className="art-excerpt">{article.excerpt}</p>}
         </header>
 
-        <div className="art-body article-content" dangerouslySetInnerHTML={{ __html: article.content }} />
+        <div className="art-body article-content" dangerouslySetInnerHTML={bodyHtml} />
 
         <footer className="art-footer">
           <p className="art-filed">

@@ -68,8 +68,13 @@ const countMatches = (patterns, text) =>
  * @param {{title: String, text: String, tags: Array<String>}} article
  * @returns {Array<{slug: String, label: String, kind: String}>} Companies first, then topics
  */
+// A CMS tag that matches a built-in label (e.g. "Policy & Safety") joins that category instead of
+// creating a near-duplicate slug
+const BY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.label.toLowerCase(), c.slug]));
+const tagToSlug = (tag) => BY_LABEL[tag.trim().toLowerCase()] || slugify(tag);
+
 export const categorizeArticle = ({ title = '', text = '', tags = [] }) => {
-  if (tags.length) return tags.map((t) => getCategory(slugify(t))).filter(Boolean);
+  if (tags.length) return [...new Set(tags.map(tagToSlug))].map((slug) => getCategory(slug)).filter(Boolean);
 
   const body = text.slice(0, 2000);
   const scored = CATEGORIES.filter((c) => c.patterns.length)

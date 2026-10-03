@@ -13,17 +13,22 @@ npm install
 npm run dev       # Vite dev server on http://localhost:3001 (no SEO injection, no robots/sitemap/llms/rss)
 npm run build     # Production build to dist/
 npm start         # Production server (server/index.js) serving dist/ on PORT (default 3001)
-npm run lint      # ESLint (flat config, .js/.jsx); currently clean, keep it at 0 errors
+npm test          # Vitest: unit, component (jsdom + Testing Library) and server tests in tests/
+npm run test:watch
+npx vitest run tests/server/app.test.js   # one file; add -t "name" for one test
+npm run lint      # ESLint (flat config, .js/.jsx); keep it at 0 errors
 npm run preview   # Plain Vite static preview (no SEO injection)
 ```
 
-There is no test framework. Verify UI changes with `npm run dev` and the route list in `src/App.jsx`. Verify SEO changes with `npm run build && PORT=3002 npm start`, then `curl` a route and read the `<head>` and the markup inside `#root`.
+Tests live in `tests/` (`utils/` and `server/` run in Node via `// @vitest-environment node`; `client/` runs in jsdom with `tests/setup.js` stubbing matchMedia, observers, fonts and canvas). Fixtures in `tests/fixtures/articles.js` use the raw Squidex shape. Page tests mock `fetchSquidexArticles` and call `resetArticlesCache()` between tests. CI (`.github/workflows/deploy.yml`) runs lint, tests and build on every push and PR, and deploys only from a green `main`.
+
+For visual changes, also run `npm run build && PORT=3002 npm start` and look at the page: the background fill and word wipe depend on real layout, which jsdom does not have.
 
 ## Architecture
 
 **Two renderers, one set of shared modules.** The browser app and `server/` both import `src/services/squidexClient.js`, `src/utils/richTextConverter.js`, `src/utils/categorize.js`, `src/utils/dates.js` and `src/seo/siteMeta.js`. Keep those files free of React, DOM APIs and bare `import.meta.env` access, or the server breaks (and the Dockerfile copies only these paths into the runtime image).
 
-**Production server** (`server/index.js`, Node built-ins only):
+**Production server** (`server/app.js` builds the request handler from a dist dir and an article getter; `server/index.js` wires the real Squidex fetch and listens; Node built-ins only):
 - Serves `dist/` (hashed `/assets/*` cached immutable, gzip for text).
 - For every HTML route, replaces the `<!--seo-head-->...<!--/seo-head-->` block in `index.html` with a per-page title, description, canonical, Open Graph/Twitter and JSON-LD (`server/render.js`), and puts crawler-readable markup (nav, article text, article links) into `<div id="root"><!--seo-body--></div>`. React replaces that markup when it mounts (client render, not hydration).
 - Generates `/robots.txt`, `/sitemap.xml`, `/llms.txt`, `/rss.xml` from live CMS data. Articles are cached in memory for 5 minutes, and the last good copy is served if Squidex fails.
@@ -36,11 +41,13 @@ There is no test framework. Verify UI changes with `npm run dev` and the route l
 
 **Categorization** (`src/utils/categorize.js`): most CMS articles have no tags, so companies and topics come from keyword rules on the title and body (a title match, or 2+ body matches). CMS `tags`, when present, replace the rules. Add companies or topics by editing `CATEGORIES`.
 
-**Newspaper frame** (`src/components/Layout.jsx`): left nav rail, the page as a focused paper panel (max 1100px), and the vertical nameplate on the right, over `NewspaperBackdrop`, a fixed full-viewport canvas drawn with `render-tag` (masthead, banner and columns of real article headlines and summaries). The canvas is decorative (aria-hidden), washed out with CSS opacity (`--backdrop-opacity`), drawn on idle, and redrawn on resize, theme and article changes. render-tag measures with canvas metrics, so fonts must be loaded before it draws.
+**Layout** (`src/components/Layout.jsx`): no page panel, frames or menu boxes. A content column (section links as a line of type in `.site-ribbon`, then `<main>`) and the vertical nameplate on the right, both marked `data-backdrop-avoid`.
 
-**Word wipe transitions** (`src/utils/wordWipe.js`, wired in `AnimatedRoutes` in `App.jsx`): on navigation the old page wipes out and the new one wipes in, every on-screen word at once from a random direction (`clip-path` keyframes `wipe-word-in/out`). The live React DOM is never split: a clone is word-split, laid over the original, animated and removed. `watchForNewContent` does the same for elements React adds later (loaded data, show more, chat messages), but not within 700ms of a keypress. Mark a subtree `data-no-wipe` to exclude it. `prefers-reduced-motion` disables all of it. `<Routes location={displayLocation}>` keeps the old page mounted during the exit.
+**Background word-wrap fill** (`NewspaperBackdrop` + `src/utils/textFill.js` + `src/utils/backdropDom.js`): words from the current edition fill every empty space of the page, including between paragraphs and around the section links, at 0/90/180/270 degrees with a 2px gap, never touching real content. `.backdrop-layer` covers the whole layout and scrolls with it, split into 1024px canvas tiles that are filled only near the viewport. `collectBlocked` measures what to keep clear: text line boxes (Range rects), media and controls, visible borders, filled backgrounds, skipping hidden content (`checkVisibility`) and wipe clones. `fillSteps` packs words on a 2px occupancy grid. Both are generators run in idle slices so they never block the main thread. Refills on content mutations (debounced 250ms), resize, theme and articles; on `pagechange` (dispatched by `AnimatedRoutes` at each page swap) tiles clear immediately so old filler never sits under new content. Any element with a non-transparent background blocks its whole box, so tool panels stay clear.
 
-**Styling**: one global stylesheet, `src/styles/App.css`. The blocks at the end ("Redesign pass", then "Newspaper overhaul") hold the newer rules and intentionally override earlier ones: square corners everywhere (`border-radius: 0 !important`, spinners excepted), reduced-motion handling, and the monochrome recolor of the infrastructure diagram via attribute selectors on its inline SVG. The display face is self-hosted via `@fontsource/playfair-display` (imported in `main.jsx`). Dark mode uses attributes on `<html>` (`data-theme`, `data-dark`); the context object and `useTheme()` live in `src/contexts/theme.js`, the provider in `ThemeContext.jsx`. An inline script in `index.html` applies the saved or system theme before paint, and `ThemeContext` follows `prefers-color-scheme` until the visitor uses the toggle (only then is `localStorage.darkMode` written). Icons come from `@phosphor-icons/react`.
+**Word wipe transitions** (`src/utils/wordWipe.js`, wired in `AnimatedRoutes` in `App.jsx`; note React 19 rewrites innerHTML whenever a new `dangerouslySetInnerHTML` object arrives, so keep those objects memoised or the wipe re-fires): on navigation the old page wipes out and the new one wipes in, every on-screen word at once from a random direction (`clip-path` keyframes `wipe-word-in/out`). The live React DOM is never split: a clone is word-split, laid over the original, animated and removed. `watchForNewContent` does the same for elements React adds later (loaded data, show more, chat messages), but not within 700ms of a keypress. Mark a subtree `data-no-wipe` to exclude it. `prefers-reduced-motion` disables all of it. `<Routes location={displayLocation}>` keeps the old page mounted during the exit.
+
+**Styling**: one global stylesheet, `src/styles/App.css`. The blocks at the end ("Redesign pass", "Newspaper overhaul", "Open composition", "Word-wrap fill") hold the newer rules and intentionally override earlier ones: square corners everywhere (`border-radius: 0 !important`, spinners excepted), reduced-motion handling, and the monochrome recolor of the infrastructure diagram via attribute selectors on its inline SVG. The display face is self-hosted via `@fontsource/playfair-display` (imported in `main.jsx`). Dark mode uses attributes on `<html>` (`data-theme`, `data-dark`); the context object and `useTheme()` live in `src/contexts/theme.js`, the provider in `ThemeContext.jsx`. An inline script in `index.html` applies the saved or system theme before paint, and `ThemeContext` follows `prefers-color-scheme` until the visitor uses the toggle (only then is `localStorage.darkMode` written). Icons come from `@phosphor-icons/react`.
 
 **House style**: no em or en dashes in visible text (`normalizeDashes()` is applied to CMS article and About data), and no emoji in the UI.
 
@@ -60,4 +67,4 @@ There is no test framework. Verify UI changes with `npm run dev` and the route l
 
 ## Deployment
 
-Push to `main` → `.github/workflows/deploy.yml` POSTs to a Portainer webhook (needs the `PORTAINER_WEBHOOK_URL` repo secret), which rebuilds the `docker-compose.yml` service. The Dockerfile is multi-stage: `npm ci && npm run build`, then a slim Node 20 image runs `node server/index.js` on port 3001 with a `/healthz` healthcheck. `vite.config.js` `server.allowedHosts` only affects `npm run dev`.
+Push to `main` → after the `check` job passes, `.github/workflows/deploy.yml` POSTs to a Portainer webhook (skipped when the `PORTAINER_WEBHOOK_URL` repo secret is missing), which rebuilds the `docker-compose.yml` service. The Dockerfile is multi-stage: `npm ci && npm run build`, then a slim Node 20 image runs `node server/index.js` on port 3001 with a `/healthz` healthcheck. `vite.config.js` `server.allowedHosts` only affects `npm run dev`.

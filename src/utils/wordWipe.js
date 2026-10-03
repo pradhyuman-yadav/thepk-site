@@ -12,7 +12,7 @@ const MAX_WORDS = 1800; // beyond this, remaining text appears without a per-wor
 const SKIP = 'svg, canvas, iframe, textarea, select, option, script, style, input, [data-no-wipe]';
 
 // clip-path start (for wipe-in) per direction; wipe-out runs toward the same edge
-const DIRECTIONS = [
+export const DIRECTIONS = [
   'inset(0 100% 0 0)', // from left
   'inset(0 0 0 100%)', // from right
   'inset(100% 0 0 0)', // from bottom
@@ -50,7 +50,7 @@ const visibleFlags = (original) => {
 };
 
 /** Wrap each word of the on-screen text nodes under `root` in a span with a random wipe direction. */
-const splitWords = (root, visible) => {
+export const splitWords = (root, visible) => {
   const nodes = textNodes(root);
 
   let count = 0;

@@ -51,6 +51,8 @@ function AnimatedRoutes() {
   useLayoutEffect(() => {
     const root = rootRef.current;
     root.style.visibility = '';
+    // Lets the background fill drop the old page's layout and re-measure straight away
+    window.dispatchEvent(new Event('pagechange'));
     const stopWatching = watchForNewContent(root);
     wipeElement(root, 'in');
     return stopWatching;

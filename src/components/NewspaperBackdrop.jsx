@@ -1,192 +1,204 @@
 import { useEffect, useRef } from 'react';
-import { layout, drawLayout } from 'render-tag';
 import { useArticles } from '../hooks/useArticles';
 import { useTheme } from '../contexts/theme';
-import { htmlToPlainText, truncateWords } from '../utils/richTextConverter';
-import { formatArticleDate } from '../utils/dates';
+import { fillSteps, drawFill, mulberry32 } from '../utils/textFill';
+import { buildVocabulary, collectBlocked, measureText } from '../utils/backdropDom';
 
 /**
- * Full-viewport broadsheet drawn on a canvas behind the page: masthead, banner headline and
- * columns of real article headlines, decks and body text. Purely decorative (aria-hidden, no
- * pointer events); the washed-out look comes from CSS opacity on the canvas.
+ * Background type that fills every empty space of the page, word-wrap style: around and between
+ * headings, paragraphs, links, the section links and the nameplate. Words are set at 0/90/180/270
+ * degrees with a 2px gap and never touch real content.
+ *
+ * The layer covers the whole layout (it scrolls with the page) and is split into canvas tiles that
+ * are filled only when they come near the viewport. Real content is measured from the DOM (text
+ * line boxes, media, controls, borders and filled backgrounds; see utils/backdropDom.js) and kept
+ * clear. Any content change (navigation, loaded data, typing, resize, theme) re-measures and
+ * refills. Decorative only: aria-hidden, no pointer events, washed out with CSS opacity.
  */
 
-const MIN_COLUMN = 210;
-const GUTTER = 22;
-const MARGIN = 24;
-// Headline sizes cycle so neighbouring stories differ; the sequence is fixed, so redraws are stable
-const HEADLINE_SIZES = [30, 19, 25, 16, 22, 34, 18];
+const TILE = 1024;
 
-const escapeHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-const baseStyle = (ink) => `<style>
-  p, h1, h2, h3 { margin: 0; color: ${ink}; }
-  .kicker { font: 700 9px 'Courier New', monospace; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
-  h2 { font-family: 'Playfair Display', 'Times New Roman', serif; font-weight: 900; line-height: 1.05; margin-bottom: 6px; }
-  .deck { font: italic 13px/1.35 'Times New Roman', Georgia, serif; margin-bottom: 6px; }
-  .body { font: 11px/1.45 'Times New Roman', Georgia, serif; text-align: justify; margin-bottom: 16px; }
-</style>`;
-
-const storyHtml = (article, index) => {
-  const size = HEADLINE_SIZES[index % HEADLINE_SIZES.length];
-  const kicker = article.categories?.[0]?.label;
-  const text = htmlToPlainText(article.content) || article.summary || '';
-  return `${kicker ? `<p class="kicker">${escapeHtml(kicker)}</p>` : ''}
-    <h2 style="font-size:${size}px">${escapeHtml(article.title)}</h2>
-    ${index % 3 === 0 ? `<p class="deck">${escapeHtml(truncateWords(article.summary, 22))}</p>` : ''}
-    <p class="body">${escapeHtml(truncateWords(text, 60 + (index % 4) * 35))}</p>`;
-};
-
-// Fill one column with consecutive stories until it is taller than the space available
-const fillColumn = (articles, startIndex, width, maxHeight, ink) => {
-  let html = '';
-  let i = startIndex;
-  let result = null;
-  // Cap the loop so an empty or tiny article list cannot spin forever
-  for (let guard = 0; guard < 12; guard += 1) {
-    html += storyHtml(articles[i % articles.length], i);
-    i += 1;
-    result = layout({ html: baseStyle(ink) + html, width });
-    if (result.height > maxHeight) break;
-  }
-  return { result, nextIndex: i };
-};
-
-const drawRule = (ctx, x1, y1, x2, y2, ink, widthPx = 1) => {
-  ctx.save();
-  ctx.strokeStyle = ink;
-  ctx.lineWidth = widthPx;
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.stroke();
-  ctx.restore();
-};
-
-const paint = (canvas, articles, ink) => {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  const ratio = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = Math.round(width * ratio);
-  canvas.height = Math.round(height * ratio);
-  canvas.style.width = `${width}px`;
-  canvas.style.height = `${height}px`;
-
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  ctx.clearRect(0, 0, width, height);
-  if (!articles.length) return;
-
-  const innerWidth = width - MARGIN * 2;
-
-  // Masthead
-  const mastheadSize = Math.max(44, Math.min(width / 9, 150));
-  const masthead = layout({
-    html: `<style>h1 { margin: 0; text-align: center; color: ${ink}; font: 900 ${mastheadSize}px/1 'Playfair Display', serif; letter-spacing: -1px; }</style><h1>THEPK.IN</h1>`,
-    width: innerWidth,
-  });
-  let y = MARGIN;
-  drawRule(ctx, MARGIN, y, width - MARGIN, y, ink, 3);
-  y += 10;
-  ctx.save();
-  ctx.translate(MARGIN, y);
-  drawLayout({ layout: masthead, width: innerWidth, ctx, renderShadows: false });
-  ctx.restore();
-  y += masthead.height + 8;
-
-  // Dateline strip between double rules
-  drawRule(ctx, MARGIN, y, width - MARGIN, y, ink, 1);
-  const dateline = layout({
-    html: `<style>p { margin: 0; color: ${ink}; font: 700 10px 'Courier New', monospace; letter-spacing: 2px; text-transform: uppercase; display: flex; }</style><p>${escapeHtml(formatArticleDate(articles[0].publishDate))} &#160;&#160; Daily AI news &#160;&#160; ${articles.length} articles</p>`,
-    width: innerWidth,
-  });
-  ctx.save();
-  ctx.translate(MARGIN, y + 6);
-  drawLayout({ layout: dateline, width: innerWidth, ctx, renderShadows: false });
-  ctx.restore();
-  y += dateline.height + 12;
-  drawRule(ctx, MARGIN, y, width - MARGIN, y, ink, 1);
-  drawRule(ctx, MARGIN, y + 3, width - MARGIN, y + 3, ink, 1);
-  y += 16;
-
-  // Banner headline from the newest article, across the full width
-  const bannerSize = Math.max(30, Math.min(width / 18, 76));
-  const banner = layout({
-    html: `<style>h2 { margin: 0; color: ${ink}; font: 900 ${bannerSize}px/1.02 'Playfair Display', serif; }</style><h2>${escapeHtml(articles[0].title)}</h2>`,
-    width: innerWidth,
-  });
-  ctx.save();
-  ctx.translate(MARGIN, y);
-  drawLayout({ layout: banner, width: innerWidth, ctx, renderShadows: false });
-  ctx.restore();
-  y += banner.height + 14;
-  drawRule(ctx, MARGIN, y, width - MARGIN, y, ink, 1);
-  y += 14;
-
-  // Columns of stories, separated by vertical rules
-  const columns = Math.max(2, Math.floor((innerWidth + GUTTER) / (MIN_COLUMN + GUTTER)));
-  const columnWidth = (innerWidth - GUTTER * (columns - 1)) / columns;
-  const available = height - y;
-  let storyIndex = 1;
-  for (let c = 0; c < columns; c += 1) {
-    const x = MARGIN + c * (columnWidth + GUTTER);
-    const { result, nextIndex } = fillColumn(articles, storyIndex, columnWidth, available, ink);
-    storyIndex = nextIndex;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x, y, columnWidth, available);
-    ctx.clip();
-    ctx.translate(x, y);
-    drawLayout({ layout: result, width: columnWidth, ctx, renderShadows: false });
-    ctx.restore();
-    if (c > 0) drawRule(ctx, x - GUTTER / 2, y, x - GUTTER / 2, height, ink, 1);
-  }
-};
+const idle = (fn) =>
+  typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(fn, { timeout: 800 }) : setTimeout(fn, 16);
+const cancelIdle = (h) =>
+  typeof window.cancelIdleCallback === 'function' ? window.cancelIdleCallback(h) : clearTimeout(h);
 
 const NewspaperBackdrop = () => {
-  const canvasRef = useRef(null);
+  const layerRef = useRef(null);
   const { articles } = useArticles();
   const { isDarkMode } = useTheme();
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-    let cancelled = false;
-    let timer = null;
+    const layer = layerRef.current;
+    const host = layer?.parentElement;
+    if (!layer || !host || !articles.length) return undefined;
 
-    const draw = () => {
-      if (cancelled) return;
-      const ink = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1A1A1A';
-      try {
-        paint(canvas, articles, ink);
-      } catch (err) {
-        // The backdrop is decoration; never let a layout failure break the page
-        console.warn('Newspaper backdrop could not render:', err);
+    const vocabulary = buildVocabulary(articles);
+    const tiles = []; // { canvas, index, dirty, visible }
+    let blocked = null;
+    let version = 0;
+    let handle = null;
+    let debounce = null;
+    let busy = false;
+
+    const ink = () => getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1A1A1A';
+
+    // Run a generator in idle time, using what the browser offers (capped at 40ms so it never becomes
+    // a long task); stale runs stop when `version` moves on
+    const runSliced = (gen, myVersion, done) => {
+      const step = (deadline) => {
+        if (myVersion !== version) {
+          busy = false;
+          return;
+        }
+        const offered = typeof deadline?.timeRemaining === 'function' ? deadline.timeRemaining() : 8;
+        const until = performance.now() + Math.min(40, Math.max(8, offered));
+        let r = gen.next();
+        while (!r.done && performance.now() < until) r = gen.next();
+        if (r.done) done(r.value);
+        else handle = idle(step);
+      };
+      handle = idle(step);
+    };
+
+    // A tile is worth filling when it is within ~600px of the viewport. Measured from geometry so it
+    // works even where IntersectionObserver is paused (background tabs); the observer only wakes
+    // this up on scroll.
+    const nearViewport = (tile) => {
+      const r = tile.canvas.getBoundingClientRect();
+      const top = layer.getBoundingClientRect().top + tile.index * TILE;
+      return top < window.innerHeight + 600 && top + Math.max(r.height, TILE) > -600;
+    };
+
+    const fillNextTile = () => {
+      if (busy) return;
+      const tile = tiles.find((t) => t.dirty && (t.visible || nearViewport(t)));
+      if (!tile || !blocked) return;
+      busy = true;
+      const myVersion = version;
+      const width = layer.clientWidth;
+      const top = tile.index * TILE;
+      const height = Math.min(TILE, layer.clientHeight - top);
+      const local = blocked
+        .filter((r) => r.bottom > top && r.top < top + height)
+        .map((r) => ({ left: r.left, right: r.right, top: r.top - top, bottom: r.bottom - top }));
+      const steps = fillSteps({
+        width,
+        height,
+        blocked: local,
+        words: vocabulary,
+        measure: measureText,
+        random: mulberry32(tile.index * 2654435761 + width),
+      });
+      runSliced(steps, myVersion, (placed) => {
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const canvas = tile.canvas;
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        canvas.style.height = `${height}px`;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+          ctx.clearRect(0, 0, width, height);
+          drawFill(ctx, placed, ink());
+        }
+        canvas.classList.add('is-drawn');
+        tile.dirty = false;
+        busy = false;
+        fillNextTile();
+      });
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          const tile = tiles.find((t) => t.canvas === e.target);
+          if (tile) tile.visible = e.isIntersecting;
+        });
+        fillNextTile();
+      },
+      { rootMargin: '600px 0px' }
+    );
+
+    // Match the tile count to the page height
+    const syncTiles = () => {
+      const count = Math.max(1, Math.ceil(layer.clientHeight / TILE));
+      while (tiles.length < count) {
+        const canvas = document.createElement('canvas');
+        canvas.className = 'backdrop-tile';
+        canvas.style.top = `${tiles.length * TILE}px`;
+        layer.appendChild(canvas);
+        const tile = { canvas, index: tiles.length, dirty: true, visible: false };
+        tiles.push(tile);
+        observer.observe(canvas);
+      }
+      while (tiles.length > count) {
+        const tile = tiles.pop();
+        observer.unobserve(tile.canvas);
+        tile.canvas.remove();
       }
     };
 
-    // render-tag measures with canvas metrics, so the display face must be loaded first
-    Promise.all([
-      document.fonts.load("900 40px 'Playfair Display'"),
-      document.fonts.load("italic 13px 'Times New Roman'"),
-    ])
-      .catch(() => {})
-      // Draw when the browser is idle so the backdrop never delays the page itself
-      .then(() => (window.requestIdleCallback ? window.requestIdleCallback(draw, { timeout: 1500 }) : setTimeout(draw, 300)));
-
-    const onResize = () => {
-      clearTimeout(timer);
-      timer = setTimeout(draw, 200);
+    // Re-measure real content and mark every tile for a refill
+    const refresh = () => {
+      version += 1;
+      busy = false;
+      cancelIdle(handle);
+      const myVersion = version;
+      syncTiles();
+      tiles.forEach((t) => {
+        t.dirty = true;
+      });
+      const origin = layer.getBoundingClientRect();
+      runSliced(collectBlocked(host, origin), myVersion, (rects) => {
+        blocked = rects;
+        fillNextTile();
+      });
     };
-    window.addEventListener('resize', onResize);
+
+    // On navigation the old page's filler must not sit under the new page: clear it and refill now
+    const onPageChange = () => {
+      clearTimeout(debounce);
+      tiles.forEach((t) => t.canvas.classList.remove('is-drawn'));
+      refresh();
+    };
+    window.addEventListener('pagechange', onPageChange);
+
+    const scheduleRefresh = () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(refresh, 250);
+    };
+
+    // Content changes anywhere in the layout (navigation, loaded data, typing) and size changes
+    // Ignores the layer itself and the word-wipe clones, which only overlay existing content
+    const isClone = (node) => node.nodeType === 1 && node.hasAttribute('data-wipe-clone');
+    const irrelevant = (r) =>
+      r.target === layer ||
+      layer.contains(r.target) ||
+      (r.type === 'childList' && [...r.addedNodes, ...r.removedNodes].every(isClone));
+    const mutations = new MutationObserver((records) => {
+      if (records.every(irrelevant)) return;
+      scheduleRefresh();
+    });
+    mutations.observe(host, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'open'] });
+    const resize = new ResizeObserver(scheduleRefresh);
+    resize.observe(host);
+
+    document.fonts.ready.then(refresh);
+
     return () => {
-      cancelled = true;
-      clearTimeout(timer);
-      window.removeEventListener('resize', onResize);
+      version += 1;
+      clearTimeout(debounce);
+      cancelIdle(handle);
+      window.removeEventListener('pagechange', onPageChange);
+      observer.disconnect();
+      mutations.disconnect();
+      resize.disconnect();
+      tiles.forEach((t) => t.canvas.remove());
     };
   }, [articles, isDarkMode]);
 
-  return <canvas ref={canvasRef} className="newspaper-backdrop" aria-hidden="true" />;
+  return <div ref={layerRef} className="backdrop-layer" aria-hidden="true" />;
 };
 
 export default NewspaperBackdrop;

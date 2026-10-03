@@ -214,4 +214,6 @@ const InfrastructureDiagram = () => {
   );
 };
 
-export default InfrastructureDiagram;
+// Memoised: the SVG markup never changes, and React 19 rewrites innerHTML whenever a new
+// dangerouslySetInnerHTML object is passed, which would restart the animation on every parent render
+export default React.memo(InfrastructureDiagram);

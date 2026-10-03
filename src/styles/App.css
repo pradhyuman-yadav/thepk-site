@@ -7908,3 +7908,294 @@ body {
   letter-spacing: -0.02em;
   text-transform: none;
 }
+
+/* ==========================================================================
+   Open composition (Oct 2026, v2): no page, no frames, no menu boxes.
+   Content sits directly on the background (no page, frames or menu boxes).
+   Background type: see NewspaperBackdrop and utils/textFill.js.
+   ========================================================================== */
+
+:root {
+  --backdrop-opacity: 0.2;
+  --column: 920px;
+}
+
+[data-theme="dark"],
+[data-dark="1"] {
+  --backdrop-opacity: 0.22;
+}
+
+body {
+  background-color: var(--page);
+}
+
+.newspaper-backdrop--fixed {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.newspaper-backdrop--band {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 40svh;
+}
+
+.layout {
+  grid-template-columns: minmax(150px, 1fr) minmax(0, var(--column)) minmax(150px, 1fr);
+  gap: 0;
+  padding: 0;
+}
+
+.page-container {
+  grid-column: 2;
+  max-width: none;
+  min-height: 100dvh;
+  margin: 0;
+  padding: clamp(1.25rem, 3vw, 2.5rem) clamp(0.5rem, 1.5vw, 1.5rem) 5rem;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+.main-content {
+  padding: 0;
+}
+
+/* Section links set as a line of type, not a menu */
+.site-ribbon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: clamp(1.5rem, 4vw, 3rem);
+}
+
+.site-ribbon .navigation {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 1.4rem;
+  width: auto;
+}
+
+.site-ribbon .navigation a,
+.site-ribbon .navigation a:hover,
+.site-ribbon .navigation a.active {
+  display: inline;
+  padding: 0 0 2px;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  transform: none;
+  background-color: transparent;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0 1px;
+  transition: background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.site-ribbon .navigation a:hover {
+  background-size: 100% 1px;
+}
+
+.site-ribbon .navigation a.active {
+  background-size: 100% 2px;
+}
+
+.site-ribbon .dark-mode-toggle,
+.site-ribbon .dark-mode-toggle:hover {
+  width: auto;
+  height: auto;
+  margin-left: auto;
+  padding: 0.25rem;
+  border: none;
+  background: none;
+  box-shadow: none;
+  transform: none;
+  color: var(--ink);
+}
+
+.site-ribbon .dark-mode-toggle:hover {
+  opacity: 0.65;
+}
+
+/* Nameplate: same place, no box */
+.name-branding {
+  grid-column: 3;
+  justify-self: end;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  padding: 1.25rem clamp(0.5rem, 1.2vw, 1.25rem);
+  background: none;
+  border: none;
+}
+
+.site-title-vertical {
+  font-size: clamp(2.25rem, calc((100dvh - 2.5rem) / 8.8), 7.5rem);
+}
+
+.hamburger-menu {
+  display: none;
+}
+
+/* ---------- Narrow screens: nameplate, cover band of type, then content ---------- */
+@media (max-width: 859px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .name-branding {
+    grid-column: 1;
+    order: 0;
+    position: static;
+    justify-self: stretch;
+    height: auto;
+    width: auto;
+    padding: 1.25rem 16px 0;
+    border: none;
+  }
+
+  .site-title-vertical {
+    writing-mode: horizontal-tb;
+    font-size: clamp(2.2rem, 11.5vw, 3.6rem);
+    line-height: 1;
+  }
+
+  .newspaper-backdrop--band {
+    order: 1;
+    grid-column: 1;
+  }
+
+  .page-container {
+    grid-column: 1;
+    order: 2;
+    width: auto;
+    min-height: auto;
+    margin: 0;
+    padding: 1.25rem 16px 4rem;
+    border: none;
+    box-shadow: none;
+  }
+
+  .site-ribbon .navigation {
+    gap: 0.5rem 1.1rem;
+  }
+}
+
+/* Nameplate fits the phone width; ribbon tightens on smaller laptops so the toggle stays on the line */
+@media (max-width: 859px) {
+  .site-title-vertical {
+    font-size: clamp(1.9rem, 9.2vw, 3.4rem);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 1280px) {
+  .site-ribbon .navigation {
+    gap: 0.4rem 1rem;
+  }
+
+  .site-ribbon .navigation a,
+  .site-ribbon .navigation a:hover,
+  .site-ribbon .navigation a.active {
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+  }
+}
+
+/* ==========================================================================
+   Word-wrap fill (Oct 2026, v3): background type fills every empty space,
+   including inside the page. Decorative borders and column rules are gone so
+   the fill flows between content; hierarchy comes from type size and weight.
+   ========================================================================== */
+
+:root {
+  --backdrop-opacity: 0.16;
+}
+
+[data-theme="dark"],
+[data-dark="1"] {
+  --backdrop-opacity: 0.18;
+}
+
+.layout {
+  position: relative;
+}
+
+.backdrop-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: var(--backdrop-opacity);
+}
+
+.backdrop-tile {
+  position: absolute;
+  left: 0;
+  display: block;
+  width: 100%;
+}
+
+.page-container,
+.name-branding {
+  position: relative;
+  z-index: 1;
+}
+
+/* The nameplate stays at the top right instead of following the scroll, so filler below it stays visible */
+.name-branding {
+  top: auto;
+  align-self: start;
+}
+
+/* No decorative frames or rules */
+.page-header,
+.art-header,
+.art-footer,
+.art-meta,
+.article-card,
+.article-card:first-child,
+.home-more-item,
+.home-page .section-heading,
+.single-article-page .section-heading,
+.art-tag,
+a.art-tag {
+  border: none;
+}
+
+.page-header::after {
+  display: none;
+}
+
+.home-more,
+.articles-list,
+.art-body {
+  column-rule: none;
+}
+
+/* Filler fades in once a tile is drawn; cleared tiles are invisible until refilled */
+.backdrop-tile {
+  opacity: 0;
+  transition: opacity 0.35s ease-out;
+}
+
+.backdrop-tile.is-drawn {
+  opacity: 1;
+}

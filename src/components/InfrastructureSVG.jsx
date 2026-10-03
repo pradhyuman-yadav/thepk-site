@@ -100,4 +100,5 @@ const InfrastructureSVG = () => (
   </div>
 );
 
-export default InfrastructureSVG;
+// Memoised so parent re-renders never rewrite the SVG markup
+export default React.memo(InfrastructureSVG);

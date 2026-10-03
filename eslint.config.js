@@ -27,8 +27,8 @@ export default defineConfig([
     },
   },
   {
-    // Production server runs in Node
-    files: ['server/**/*.js'],
+    // Production server and its tests run in Node
+    files: ['server/**/*.js', 'tests/server/**/*.js', 'tests/utils/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       globals: globals.node,

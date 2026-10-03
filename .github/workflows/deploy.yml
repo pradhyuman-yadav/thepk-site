@@ -1,13 +1,36 @@
-name: Deploy
+name: CI and deploy
 
 on:
   push:
-    branches: [main]
+  pull_request:
 
 jobs:
+  # Lint, unit/component/server tests, and a production build on every push and PR
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  # Only a green main branch reaches the site
   deploy:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Portainer redeploy
+        env:
+          WEBHOOK: ${{ secrets.PORTAINER_WEBHOOK_URL }}
         run: |
-          curl -X POST "${{ secrets.PORTAINER_WEBHOOK_URL }}"
+          if [ -z "$WEBHOOK" ]; then
+            echo "PORTAINER_WEBHOOK_URL is not set for this repository; skipping deploy."
+            exit 0
+          fi
+          curl --fail -X POST "$WEBHOOK"
