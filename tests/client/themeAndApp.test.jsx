@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { rawArticles } from '../fixtures/articles.js';
 
 vi.mock('../../src/services/squidexClient', async (importOriginal) => ({
@@ -77,12 +77,57 @@ describe('Pipeline', () => {
         <Pipeline />
       </MemoryRouter>
     );
-    expect(screen.getByRole('heading', { name: 'Live services' })).toBeInTheDocument();
+    // Scoped to the list: some services also appear as nodes in the infrastructure flow
+    const list = screen.getByRole('heading', { name: 'Live services' }).nextElementSibling;
     for (const s of SERVICES) {
-      const link = screen.getByRole('link', { name: s.name });
+      const link = within(list).getByRole('link', { name: s.name });
       expect(link).toHaveAttribute('href', s.url);
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     }
+  });
+});
+
+describe('Infrastructure flow', () => {
+  it('is gone from Home', async () => {
+    const { MemoryRouter } = await import('react-router-dom');
+    const { default: Home } = await import('../../src/pages/Home');
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+    expect(screen.queryByText(/My Infrastructure/)).toBeNull();
+  });
+
+  it('renders the request path and both service groups on Pipeline', async () => {
+    const { MemoryRouter } = await import('react-router-dom');
+    const { default: Pipeline } = await import('../../src/pages/Pipeline');
+    const { INFRA_PATH, INFRA_GROUPS } = await import('../../src/seo/infrastructure');
+    const { container } = render(
+      <MemoryRouter>
+        <Pipeline />
+      </MemoryRouter>
+    );
+    const figure = container.querySelector('figure.infra-flow');
+    expect(figure.getAttribute('aria-label')).toMatch(/^How thepk.in is served: Visitor/);
+    const steps = [...figure.querySelectorAll('.infra-path > li .infra-name')].map((n) => n.textContent);
+    expect(steps).toEqual(INFRA_PATH.map((n) => n.name));
+    expect(screen.getByRole('heading', { name: 'Site' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Operations' })).toBeInTheDocument();
+    // One connector between path nodes plus one into the branch, each reserving its lane
+    const connectors = figure.querySelectorAll('.infra-connector');
+    expect(connectors).toHaveLength(INFRA_PATH.length);
+    for (const c of connectors) expect(c).toHaveAttribute('data-backdrop-block');
+
+    const all = [...INFRA_PATH, ...INFRA_GROUPS.flatMap((g) => g.nodes)];
+    for (const node of all.filter((n) => n.url)) {
+      const link = [...figure.querySelectorAll('a')].find((a) => a.textContent === node.name);
+      expect(link, node.name).toBeDefined();
+      expect(link).toHaveAttribute('href', node.url);
+      if (node.url.startsWith('http')) expect(link).toHaveAttribute('target', '_blank');
+      else expect(link).not.toHaveAttribute('target');
+    }
+    expect(within(figure).getAllByText('Sign-in')).toHaveLength(all.filter((n) => n.access === 'sign-in').length);
   });
 });

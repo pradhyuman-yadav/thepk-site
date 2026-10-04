@@ -10,7 +10,8 @@ const MONO = "'Courier New', monospace";
 
 export const TEXT_PAD = 4; // clearance around real text
 export const BOX_PAD = 2; // clearance around controls, rules and filled boxes
-const SOLID = 'img, svg, canvas, video, iframe, input, textarea, select, button, hr, progress, meter';
+// Elements kept clear as whole boxes; [data-backdrop-block] lets components reserve an area (e.g. an animated lane)
+const SOLID = 'img, svg, canvas, video, iframe, input, textarea, select, button, hr, progress, meter, [data-backdrop-block]';
 const SKIP = '.backdrop-layer, [data-wipe-clone], script, style';
 
 let measureCtx = null;

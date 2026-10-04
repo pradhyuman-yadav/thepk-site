@@ -112,3 +112,13 @@ describe('collectBlocked', () => {
     expect(yields).toBeGreaterThan(1);
   });
 });
+
+describe('data-backdrop-block', () => {
+  it('reserves the whole box of an element with no text, border or background', () => {
+    document.body.innerHTML = '<div id="root"><span id="lane" data-backdrop-block></span></div>';
+    const root = document.getElementById('root');
+    root.querySelector('#lane').getBoundingClientRect = () => rect(10, 10, 14, 40);
+    const rects = run(collectBlocked(root, { left: 0, top: 0 }));
+    expect(rects).toEqual([{ left: 10 - BOX_PAD, top: 10 - BOX_PAD, right: 24 + BOX_PAD, bottom: 50 + BOX_PAD }]);
+  });
+});

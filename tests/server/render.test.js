@@ -162,3 +162,14 @@ describe('services', () => {
     expect(page('/tools').body).not.toContain('Live services');
   });
 });
+
+describe('infrastructure flow', () => {
+  it('is part of the pipeline page HTML for crawlers', async () => {
+    const { INFRA_PATH, INFRA_GROUPS } = await import('../../src/seo/infrastructure.js');
+    const body = page('/pipeline').body;
+    for (const n of [...INFRA_PATH, ...INFRA_GROUPS.flatMap((g) => g.nodes)]) expect(body).toContain(n.name);
+    expect(body).toContain('<a href="https://api.thepk.in">Backend API</a>');
+    expect(body).toContain('<a href="/llm-chat">SLM / LLM</a>');
+    expect(page('/').body).not.toContain('Edge proxy');
+  });
+});

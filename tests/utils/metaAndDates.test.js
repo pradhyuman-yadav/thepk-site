@@ -77,3 +77,16 @@ describe('SERVICES', () => {
     }
   });
 });
+
+describe('infrastructure data', () => {
+  it('summarises the flow without dashes and keeps every link valid', async () => {
+    const { INFRA_PATH, INFRA_GROUPS, infraSummary } = await import('../../src/seo/infrastructure.js');
+    const summary = infraSummary();
+    expect(summary).toMatch(/^Visitor \(Browser or API client\), then DNS/);
+    expect(summary).not.toMatch(/[–—]/);
+    for (const n of [...INFRA_PATH, ...INFRA_GROUPS.flatMap((g) => g.nodes)]) {
+      if (n.url) expect(n.url).toMatch(/^(https:\/\/[a-z0-9-]+\.thepk\.in|\/)/);
+      if (n.access) expect(['open', 'sign-in']).toContain(n.access);
+    }
+  });
+});

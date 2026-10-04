@@ -1,5 +1,5 @@
 import React from 'react';
-import InfrastructureSVG from '../components/InfrastructureSVG';
+import InfraFlow from '../components/InfraFlow';
 import { SERVICES } from '../seo/siteMeta';
 
 const Pipeline = () => {
@@ -32,9 +32,7 @@ const Pipeline = () => {
       </header>
 
       <div className="pipeline-content">
-        <div className="pipeline-diagram">
-          <InfrastructureSVG />
-        </div>
+        <InfraFlow />
 
         <h2 className="section-header">Services</h2>
         <div className="pipeline-cards-grid">

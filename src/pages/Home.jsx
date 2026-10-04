@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import InfrastructureDiagram from '../components/InfrastructureDiagram';
 import TopicIndex from '../components/TopicIndex';
 import { useArticles } from '../hooks/useArticles';
 import { formatArticleDate } from '../utils/dates';
@@ -83,13 +82,6 @@ const Home = () => {
         </section>
       )}
 
-      <section className="home-section infrastructure-showcase" aria-labelledby="infra-heading">
-        <h2 id="infra-heading" className="section-heading">My Infrastructure &amp; Architecture</h2>
-        <p className="home-infra-note">
-          How this site is served, from DNS to a home server. <Link to="/pipeline" className="text-link">See the full pipeline</Link>.
-        </p>
-        <InfrastructureDiagram />
-      </section>
     </div>
   );
 };

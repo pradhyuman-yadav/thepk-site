@@ -17,6 +17,7 @@ import {
 } from '../src/seo/siteMeta.js';
 import { countCategories, getCategory, relatedArticles } from '../src/utils/categorize.js';
 import { formatArticleDate as displayDate } from '../src/utils/dates.js';
+import { INFRA_PATH, INFRA_GROUPS } from '../src/seo/infrastructure.js';
 
 // Home page hero copy. Keep in sync with src/pages/Home.jsx.
 export const HOME_HEADLINE = 'Daily AI news briefs';
@@ -283,6 +284,13 @@ export const renderPage = ({ path, searchParams, articles }) => {
   crumbs.push({ name: route.title, path });
   graph.push(breadcrumb(crumbs));
 
+  const infraNode = (n) =>
+    `${n.url ? `<a href="${n.url}">${esc(n.name)}</a>` : esc(n.name)}: ${esc(n.detail)}`;
+  const infraFlow =
+    path === '/pipeline'
+      ? `<figure><ol>${INFRA_PATH.map((n) => `<li>${infraNode(n)}</li>`).join('')}</ol>${INFRA_GROUPS.map((g) => `<section><h3>${esc(g.name)}</h3><ul>${g.nodes.map((n) => `<li>${infraNode(n)}</li>`).join('')}</ul></section>`).join('')}</figure>`
+      : '';
+
   const serviceLinks =
     path === '/pipeline'
       ? `<section><h2>Live services</h2><ul>${SERVICES.map((s) => `<li><a href="${s.url}">${esc(s.name)}</a>: ${esc(s.description)}</li>`).join('')}</ul></section>`
@@ -299,7 +307,7 @@ export const renderPage = ({ path, searchParams, articles }) => {
   return {
     status: 200,
     head: headTags({ title: route.title, description: route.description, path, graph }),
-    body: shell(`<h1>${esc(route.title)}</h1><p>${esc(route.description)}</p>${toolLinks}${serviceLinks}`),
+    body: shell(`<h1>${esc(route.title)}</h1><p>${esc(route.description)}</p>${toolLinks}${infraFlow}${serviceLinks}`),
   };
 };
 

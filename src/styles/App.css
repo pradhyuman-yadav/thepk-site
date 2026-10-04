@@ -7232,28 +7232,6 @@ a.art-tag:hover {
   }
 }
 
-/* ---------- Infrastructure diagram: monochrome ---------- */
-.infrastructure-diagram .back-wires-embed [stroke="#d5d5d5"] {
-  stroke: var(--border);
-}
-
-.infrastructure-diagram .back-wires-embed [fill="#666"] {
-  fill: var(--ink);
-}
-
-.infrastructure-diagram .back-wires-embed [fill="#999"] {
-  fill: var(--ink);
-  fill-opacity: 0.65;
-}
-
-.infrastructure-diagram .front-wires-embed [stroke] {
-  stroke: var(--ink);
-}
-
-.infrastructure-diagram .back-wires-embed svg {
-  filter: none;
-}
-
 /* ---------- Crawler fallback inside #root (replaced by React on load) ---------- */
 .ssr-shell {
   max-width: 70ch;
@@ -8247,4 +8225,154 @@ a.art-tag {
   font-size: 0.95rem;
   line-height: 1.5;
   max-width: 40ch;
+}
+
+/* ---------- Infrastructure flow (Pipeline): typeset request path ---------- */
+.infra-flow {
+  margin: 0 0 3.5rem;
+}
+
+.infra-path {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.infra-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.infra-node {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.75rem;
+}
+
+.infra-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.4rem, 2.6vw, 2.1rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.infra-link {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0 2px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.infra-link:hover {
+  background-size: 100% 2px;
+}
+
+.infra-detail {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+  opacity: 0.8;
+}
+
+.infra-access {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 0 0.35rem;
+}
+
+.infra-access--sign-in {
+  border-style: dashed;
+}
+
+/* Ink rule between nodes, with a pulse travelling down it to show the request direction */
+.infra-connector {
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 2.2rem;
+  margin: 0.4rem 0 0.4rem 0.55rem;
+}
+
+.infra-connector::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 6px;
+  width: 2px;
+  background: var(--ink);
+}
+
+.infra-pulse {
+  position: absolute;
+  top: 0;
+  left: 4px;
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .infra-pulse {
+    animation: infra-pulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    animation-delay: calc(var(--step, 0) * 0.3s);
+  }
+}
+
+@keyframes infra-pulse {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(calc(2.2rem - 6px));
+    opacity: 0;
+  }
+}
+
+/* The home server branches into Site and Operations */
+.infra-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem 3rem;
+  padding-top: 1.25rem;
+  border-top: 2px solid var(--ink);
+}
+
+.main-content .infra-group-name {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 0.9rem;
+  color: var(--ink);
+}
+
+.infra-group-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.infra-group-list .infra-name {
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
 }
