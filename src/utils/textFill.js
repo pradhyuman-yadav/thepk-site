@@ -174,3 +174,62 @@ export const drawFill = (ctx, placed, ink, offsetY = 0) => {
     ctx.restore();
   }
 };
+
+export const EDGES = ['left', 'right', 'top', 'bottom'];
+
+/**
+ * The visible part of a word box during a wipe. `fraction` 0 = hidden, 1 = whole box.
+ * The edge is where the wipe starts: 'left' reveals left to right, 'top' top to bottom, etc.
+ * Wiping out uses the same edge with a falling fraction, so the word retreats toward that edge.
+ * @param {{x:number,y:number,w:number,h:number}} box
+ * @param {'left'|'right'|'top'|'bottom'} edge
+ * @param {number} fraction
+ */
+export const clipRegion = (box, edge, fraction) => {
+  const f = Math.max(0, Math.min(1, fraction));
+  switch (edge) {
+    case 'right':
+      return { x: box.x + box.w * (1 - f), y: box.y, w: box.w * f, h: box.h };
+    case 'top':
+      return { x: box.x, y: box.y, w: box.w, h: box.h * f };
+    case 'bottom':
+      return { x: box.x, y: box.y + box.h * (1 - f), w: box.w, h: box.h * f };
+    default:
+      return { x: box.x, y: box.y, w: box.w * f, h: box.h };
+  }
+};
+
+/**
+ * A different word that fits entirely inside an existing word's box (same position and rotation),
+ * so swapping it in can never overlap a neighbour. Tries random words from the largest size that
+ * fits downward. Returns null when nothing fits.
+ * @param {Object} old - a placement from fillSteps
+ * @param {Array<{text:string, font:(size:number)=>string}>} words
+ * @param {(text:string, font:string) => {w:number, ascent:number, descent:number}} measure
+ * @param {() => number} random
+ * @param {number[]} [sizes]
+ */
+export const pickReplacement = (old, words, measure, random, sizes = DEFAULT_SIZES, tries = 12) => {
+  const vertical = old.rotation === 90 || old.rotation === 270;
+  for (let t = 0; t < tries; t += 1) {
+    const word = words[Math.floor(random() * words.length)];
+    if (!word || word.text === old.text) continue;
+    for (let s = sizes.length - 1; s >= 0; s -= 1) {
+      if (sizes[s] > old.size * 1.5) continue;
+      const font = word.font(sizes[s]);
+      const m = measure(word.text, font);
+      const textW = Math.ceil(m.w);
+      const textH = Math.ceil(m.ascent + m.descent);
+      if (!textW || !textH) continue;
+      const w = vertical ? textH : textW;
+      const h = vertical ? textW : textH;
+      if (w <= old.w && h <= old.h) {
+        return { text: word.text, font, size: sizes[s], rotation: old.rotation, x: old.x, y: old.y, w, h, ascent: m.ascent, descent: m.descent };
+      }
+    }
+  }
+  return null;
+};
+
+/** Ease used for wipes, matching the CSS cubic-bezier(0.16, 1, 0.3, 1) closely enough. */
+export const easeOutQuart = (t) => 1 - (1 - Math.max(0, Math.min(1, t))) ** 4;

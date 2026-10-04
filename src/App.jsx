@@ -38,6 +38,8 @@ function AnimatedRoutes() {
   useEffect(() => {
     if (routeKey(location) === routeKey(displayLocation)) return undefined;
     let cancelled = false;
+    // The background type wipes out together with the page
+    window.dispatchEvent(new Event('pageexit'));
     wipeElement(rootRef.current, 'out').then(() => {
       if (cancelled) return;
       window.scrollTo(0, 0);

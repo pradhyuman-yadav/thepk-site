@@ -1,27 +1,40 @@
 import { useEffect, useRef } from 'react';
 import { useArticles } from '../hooks/useArticles';
 import { useTheme } from '../contexts/theme';
-import { fillSteps, drawFill, mulberry32 } from '../utils/textFill';
+import { fillSteps, drawFill, mulberry32, clipRegion, pickReplacement, easeOutQuart, EDGES } from '../utils/textFill';
 import { buildVocabulary, collectBlocked, measureText } from '../utils/backdropDom';
+import { prefersReducedMotion, WIPE_MS } from '../utils/wordWipe';
 
 /**
- * Background type that fills every empty space of the page, word-wrap style: around and between
- * headings, paragraphs, links, the section links and the nameplate. Words are set at 0/90/180/270
- * degrees with a 2px gap and never touch real content.
+ * Generated background type that fills every empty space of the page, word-wrap style: around and
+ * between headings, paragraphs, links, the section links and the nameplate. Words are set at
+ * 0/90/180/270 degrees with a 2px gap and never touch real content.
+ *
+ * - Each page and theme gets a freshly generated composition (a new seed per "edition").
+ * - Words wipe in all at once from random directions, wipe out with the page on navigation, and
+ *   tiles wipe in as they scroll into view.
+ * - Every few seconds a few on-screen words wipe out and are replaced by new words that fit inside
+ *   the same box, so the page keeps composing itself without ever overlapping.
  *
  * The layer covers the whole layout (it scrolls with the page) and is split into canvas tiles that
- * are filled only when they come near the viewport. Real content is measured from the DOM (text
- * line boxes, media, controls, borders and filled backgrounds; see utils/backdropDom.js) and kept
- * clear. Any content change (navigation, loaded data, typing, resize, theme) re-measures and
- * refills. Decorative only: aria-hidden, no pointer events, washed out with CSS opacity.
+ * are filled only near the viewport. Each tile keeps an offscreen copy of its finished type;
+ * animations copy clipped slices of that copy, so a frame never re-renders text. Real content is
+ * measured from the DOM (utils/backdropDom.js). Decorative only: aria-hidden, no pointer events,
+ * washed out with CSS opacity. Reduced motion: drawn instantly, no ambient changes.
  */
 
 const TILE = 1024;
+const AMBIENT_EVERY_MS = 3500;
+const AMBIENT_SHARE = 0.03; // share of a visible tile's words that change per round
+const SWAP_OUT_MS = 320;
+const SWAP_IN_MS = 420;
 
 const idle = (fn) =>
   typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(fn, { timeout: 800 }) : setTimeout(fn, 16);
 const cancelIdle = (h) =>
   typeof window.cancelIdleCallback === 'function' ? window.cancelIdleCallback(h) : clearTimeout(h);
+
+const newSeed = () => Math.floor(Math.random() * 2 ** 31);
 
 const NewspaperBackdrop = () => {
   const layerRef = useRef(null);
@@ -34,15 +47,94 @@ const NewspaperBackdrop = () => {
     if (!layer || !host || !articles.length) return undefined;
 
     const vocabulary = buildVocabulary(articles);
-    const tiles = []; // { canvas, index, dirty, visible }
+    // tile: { canvas, off, index, dirty, visible, fresh, placed, ratio, width, height }
+    const tiles = [];
     let blocked = null;
     let version = 0;
+    let edition = newSeed(); // changes per page and theme: a new composition each time
     let handle = null;
     let debounce = null;
     let busy = false;
+    const animations = new Set();
+    let frame = null;
+    const random = Math.random;
 
     const ink = () => getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1A1A1A';
+    const reduced = prefersReducedMotion();
 
+    // ---- Animation loop: copies clipped slices of each tile's offscreen copy ----
+    const visibleCtx = (tile) => {
+      const ctx = tile.canvas.getContext('2d');
+      if (ctx) ctx.setTransform(1, 0, 0, 1, 0, 0);
+      return ctx;
+    };
+
+    const paintSlice = (tile, p, edge, fraction) => {
+      const ctx = visibleCtx(tile);
+      if (!ctx) return;
+      const r = tile.ratio;
+      // 1px margin covers glyph overhang; the 2px gap keeps neighbours untouched
+      const box = { x: (p.x - 1) * r, y: (p.y - 1) * r, w: (p.w + 2) * r, h: (p.h + 2) * r };
+      ctx.clearRect(box.x, box.y, box.w, box.h);
+      const c = clipRegion(box, edge, fraction);
+      if (c.w >= 1 && c.h >= 1) ctx.drawImage(tile.off, c.x, c.y, c.w, c.h, c.x, c.y, c.w, c.h);
+    };
+
+    const tick = (now) => {
+      frame = null;
+      for (const a of animations) {
+        if (!tiles.includes(a.tile)) {
+          animations.delete(a);
+          continue;
+        }
+        const t = (now - a.start) / a.duration;
+        if (t < 0) continue;
+        const e = easeOutQuart(t);
+        paintSlice(a.tile, a.p, a.edge, a.mode === 'in' ? e : 1 - e);
+        if (t >= 1) {
+          animations.delete(a);
+          a.done?.();
+        }
+      }
+      if (animations.size) frame = requestAnimationFrame(tick);
+    };
+
+    const animate = (tile, p, mode, duration, delay = 0, done) => {
+      animations.add({ tile, p, mode, duration, start: performance.now() + delay, edge: EDGES[Math.floor(random() * 4)], done });
+      frame ??= requestAnimationFrame(tick);
+    };
+
+    const cancelTileAnimations = (tile) => {
+      for (const a of animations) if (a.tile === tile) animations.delete(a);
+    };
+
+    // Show a tile's offscreen copy: wipe every word in at once, or copy instantly
+    const reveal = (tile, wipe) => {
+      cancelTileAnimations(tile);
+      const ctx = visibleCtx(tile);
+      if (!ctx) return;
+      if (!wipe || reduced) {
+        ctx.clearRect(0, 0, tile.canvas.width, tile.canvas.height);
+        ctx.drawImage(tile.off, 0, 0);
+        return;
+      }
+      ctx.clearRect(0, 0, tile.canvas.width, tile.canvas.height);
+      tile.placed.forEach((p) => animate(tile, p, 'in', WIPE_MS));
+    };
+
+    // Wipe every drawn word out (navigation); the visible canvas ends empty
+    const wipeOutAll = () => {
+      tiles.forEach((tile) => {
+        cancelTileAnimations(tile);
+        if (!tile.placed || reduced || !(tile.visible || nearViewport(tile))) {
+          visibleCtx(tile)?.clearRect(0, 0, tile.canvas.width, tile.canvas.height);
+          return;
+        }
+        tile.placed.forEach((p) => animate(tile, p, 'out', WIPE_MS));
+      });
+    };
+
+    // ---- Idle-time work: measuring content and packing words ----
     // Run a generator in idle time, using what the browser offers (capped at 40ms so it never becomes
     // a long task); stale runs stop when `version` moves on
     const runSliced = (gen, myVersion, done) => {
@@ -64,11 +156,10 @@ const NewspaperBackdrop = () => {
     // A tile is worth filling when it is within ~600px of the viewport. Measured from geometry so it
     // works even where IntersectionObserver is paused (background tabs); the observer only wakes
     // this up on scroll.
-    const nearViewport = (tile) => {
-      const r = tile.canvas.getBoundingClientRect();
+    function nearViewport(tile) {
       const top = layer.getBoundingClientRect().top + tile.index * TILE;
-      return top < window.innerHeight + 600 && top + Math.max(r.height, TILE) > -600;
-    };
+      return top < window.innerHeight + 600 && top + TILE > -600;
+    }
 
     const fillNextTile = () => {
       if (busy) return;
@@ -88,22 +179,28 @@ const NewspaperBackdrop = () => {
         blocked: local,
         words: vocabulary,
         measure: measureText,
-        random: mulberry32(tile.index * 2654435761 + width),
+        // Same edition and tile give the same layout, so in-place refreshes (typing, data) barely move
+        random: mulberry32((edition ^ (tile.index * 2654435761)) + width),
       });
       runSliced(steps, myVersion, (placed) => {
         const ratio = Math.min(window.devicePixelRatio || 1, 2);
-        const canvas = tile.canvas;
-        canvas.width = Math.round(width * ratio);
-        canvas.height = Math.round(height * ratio);
-        canvas.style.height = `${height}px`;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-          ctx.clearRect(0, 0, width, height);
-          drawFill(ctx, placed, ink());
+        const { canvas } = tile;
+        tile.off ??= document.createElement('canvas');
+        for (const c of [canvas, tile.off]) {
+          c.width = Math.round(width * ratio);
+          c.height = Math.round(height * ratio);
         }
+        canvas.style.height = `${height}px`;
+        const offCtx = tile.off.getContext('2d');
+        if (offCtx) {
+          offCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+          offCtx.clearRect(0, 0, width, height);
+          drawFill(offCtx, placed, ink());
+        }
+        Object.assign(tile, { placed, ratio, width, height, dirty: false });
         canvas.classList.add('is-drawn');
-        tile.dirty = false;
+        reveal(tile, tile.fresh);
+        tile.fresh = false;
         busy = false;
         fillNextTile();
       });
@@ -128,12 +225,13 @@ const NewspaperBackdrop = () => {
         canvas.className = 'backdrop-tile';
         canvas.style.top = `${tiles.length * TILE}px`;
         layer.appendChild(canvas);
-        const tile = { canvas, index: tiles.length, dirty: true, visible: false };
+        const tile = { canvas, off: null, index: tiles.length, dirty: true, visible: false, fresh: true, placed: null };
         tiles.push(tile);
         observer.observe(canvas);
       }
       while (tiles.length > count) {
         const tile = tiles.pop();
+        cancelTileAnimations(tile);
         observer.unobserve(tile.canvas);
         tile.canvas.remove();
       }
@@ -156,12 +254,24 @@ const NewspaperBackdrop = () => {
       });
     };
 
-    // On navigation the old page's filler must not sit under the new page: clear it and refill now
+    // Navigation: the old edition wipes out with the old page...
+    const onPageExit = () => {
+      version += 1; // stop any fill in progress for the old page
+      clearTimeout(debounce);
+      wipeOutAll();
+    };
+    // ...and at the swap a new edition is generated and wipes in once measured
     const onPageChange = () => {
       clearTimeout(debounce);
-      tiles.forEach((t) => t.canvas.classList.remove('is-drawn'));
+      edition = newSeed();
+      tiles.forEach((t) => {
+        cancelTileAnimations(t);
+        visibleCtx(t)?.clearRect(0, 0, t.canvas.width, t.canvas.height);
+        t.fresh = true;
+      });
       refresh();
     };
+    window.addEventListener('pageexit', onPageExit);
     window.addEventListener('pagechange', onPageChange);
 
     const scheduleRefresh = () => {
@@ -169,8 +279,8 @@ const NewspaperBackdrop = () => {
       debounce = setTimeout(refresh, 250);
     };
 
-    // Content changes anywhere in the layout (navigation, loaded data, typing) and size changes
-    // Ignores the layer itself and the word-wipe clones, which only overlay existing content
+    // Content changes anywhere in the layout (loaded data, typing) and size changes. Ignores the
+    // layer itself and the word-wipe clones, which only overlay existing content.
     const isClone = (node) => node.nodeType === 1 && node.hasAttribute('data-wipe-clone');
     const irrelevant = (r) =>
       r.target === layer ||
@@ -184,12 +294,47 @@ const NewspaperBackdrop = () => {
     const resize = new ResizeObserver(scheduleRefresh);
     resize.observe(host);
 
+    // ---- Ambient: a few on-screen words swap for new ones every few seconds ----
+    const ambient = reduced
+      ? null
+      : setInterval(() => {
+          if (document.visibilityState !== 'visible') return;
+          const color = ink();
+          tiles
+            .filter((t) => t.placed && !t.dirty && !t.fresh && (t.visible || nearViewport(t)))
+            .forEach((tile) => {
+              const count = Math.max(1, Math.round(tile.placed.length * AMBIENT_SHARE));
+              for (let i = 0; i < count; i += 1) {
+                const index = Math.floor(random() * tile.placed.length);
+                const old = tile.placed[index];
+                if (old.swapping) continue;
+                const next = pickReplacement(old, vocabulary, measureText, random);
+                if (!next) continue;
+                old.swapping = true;
+                const delay = random() * (AMBIENT_EVERY_MS - SWAP_OUT_MS - SWAP_IN_MS);
+                animate(tile, old, 'out', SWAP_OUT_MS, delay, () => {
+                  if (tile.placed?.[index] !== old) return; // tile was refilled meanwhile
+                  const offCtx = tile.off?.getContext('2d');
+                  if (!offCtx) return;
+                  offCtx.clearRect(old.x - 1, old.y - 1, old.w + 2, old.h + 2);
+                  drawFill(offCtx, [next], color);
+                  tile.placed[index] = next;
+                  animate(tile, next, 'in', SWAP_IN_MS);
+                });
+              }
+            });
+        }, AMBIENT_EVERY_MS);
+
     document.fonts.ready.then(refresh);
 
     return () => {
       version += 1;
       clearTimeout(debounce);
+      clearInterval(ambient);
       cancelIdle(handle);
+      if (frame) cancelAnimationFrame(frame);
+      animations.clear();
+      window.removeEventListener('pageexit', onPageExit);
       window.removeEventListener('pagechange', onPageChange);
       observer.disconnect();
       mutations.disconnect();
