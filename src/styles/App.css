@@ -8376,3 +8376,61 @@ a.art-tag {
 .infra-group-list .infra-name {
   font-size: clamp(1.15rem, 2vw, 1.5rem);
 }
+
+/* ---------- Privacy policy ---------- */
+.privacy-section {
+  max-width: 70ch;
+  margin: 0 0 2.25rem;
+}
+
+.privacy-section p {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  margin: 0 0 0.9rem;
+}
+
+.main-content .privacy-heading {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.35rem, 2.4vw, 1.8rem);
+  line-height: 1.15;
+  margin: 0 0 0.6rem;
+}
+
+.privacy-app {
+  margin: 0 0 1.75rem;
+  scroll-margin-top: 2rem;
+}
+
+.main-content .privacy-app-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.privacy-section .privacy-app-meta {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  margin: 0.15rem 0 0.9rem;
+}
+
+.privacy-app-facts {
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.privacy-fact dt {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.privacy-fact dd {
+  margin: 0.15rem 0 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}

@@ -22,6 +22,7 @@ import LLMChat from './pages/LLMChat';
 import Pipeline from './pages/Pipeline';
 import DCMetro from './pages/DCMetro';
 import NotFound from './pages/NotFound';
+import Privacy from './pages/Privacy';
 import { RouteSeo } from './hooks/useSeo';
 import { wipeElement, watchForNewContent } from './utils/wordWipe';
 import './styles/App.css';
@@ -82,6 +83,7 @@ function AnimatedRoutes() {
         <Route path="/llm-chat" element={<LLMChat />} />
         <Route path="/pipeline" element={<Pipeline />} />
         <Route path="/dc-metro" element={<DCMetro />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

@@ -18,6 +18,7 @@ import {
 import { countCategories, getCategory, relatedArticles } from '../src/utils/categorize.js';
 import { formatArticleDate as displayDate } from '../src/utils/dates.js';
 import { INFRA_PATH, INFRA_GROUPS } from '../src/seo/infrastructure.js';
+import { DEVELOPER, CONTACT_EMAIL, UPDATED, APPS, SECTIONS, APP_FIELDS } from '../src/seo/privacy.js';
 
 // Home page hero copy. Keep in sync with src/pages/Home.jsx.
 export const HOME_HEADLINE = 'Daily AI news briefs';
@@ -291,6 +292,18 @@ export const renderPage = ({ path, searchParams, articles }) => {
       ? `<figure><ol>${INFRA_PATH.map((n) => `<li>${infraNode(n)}</li>`).join('')}</ol>${INFRA_GROUPS.map((g) => `<section><h3>${esc(g.name)}</h3><ul>${g.nodes.map((n) => `<li>${infraNode(n)}</li>`).join('')}</ul></section>`).join('')}</figure>`
       : '';
 
+  // Full policy text, so store reviewers and crawlers can read it without JavaScript
+  const privacyText =
+    path === '/privacy'
+      ? `<p>For apps and games by ${esc(DEVELOPER)}. Last updated <time datetime="${UPDATED}">${UPDATED}</time>.</p>${SECTIONS.map(
+          (s) => `<section><h2>${esc(s.heading)}</h2>${s.paragraphs.map((p) => `<p>${esc(p)}</p>`).join('')}</section>`
+        ).join('')}<section><h2>App details</h2>${APPS.map(
+          (a) => `<article id="${a.id}"><h3>${esc(a.name)}</h3><p>${esc(a.platforms)}, ${esc(a.packageId)}</p><dl>${APP_FIELDS.map(
+            ([k, label]) => `<dt>${esc(label)}</dt><dd>${esc(a[k])}</dd>`
+          ).join('')}</dl></article>`
+        ).join('')}</section><section><h2>Contact</h2><p><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p></section>`
+      : '';
+
   const serviceLinks =
     path === '/pipeline'
       ? `<section><h2>Live services</h2><ul>${SERVICES.map((s) => `<li><a href="${s.url}">${esc(s.name)}</a>: ${esc(s.description)}</li>`).join('')}</ul></section>`
@@ -307,7 +320,7 @@ export const renderPage = ({ path, searchParams, articles }) => {
   return {
     status: 200,
     head: headTags({ title: route.title, description: route.description, path, graph }),
-    body: shell(`<h1>${esc(route.title)}</h1><p>${esc(route.description)}</p>${toolLinks}${infraFlow}${serviceLinks}`),
+    body: shell(`<h1>${esc(route.title)}</h1><p>${esc(route.description)}</p>${toolLinks}${infraFlow}${serviceLinks}${privacyText}`),
   };
 };
 

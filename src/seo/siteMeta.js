@@ -64,6 +64,10 @@ export const STATIC_ROUTES = {
     title: 'DC Metro Real-Time Transit',
     description: 'Real-time Washington DC Metro transit information.',
   },
+  '/privacy': {
+    title: 'App Privacy Policy',
+    description: 'Privacy policy for the apps and games published by Pradhyuman Yadav: what each app stores, what it sends, and how to reach me.',
+  },
   '/tools/git-commit-generator': { title: 'Git Commit Message Generator', description: 'Turn a plain description of your changes into a clear git commit message.' },
   '/tools/code-formatter': { title: 'Code Formatter', description: 'Format and beautify JavaScript, Python, HTML, and CSS in the browser.' },
   '/tools/api-tester': { title: 'API Tester', description: 'Send REST requests with custom headers, query parameters, and bodies, and inspect status, timing, and response.' },

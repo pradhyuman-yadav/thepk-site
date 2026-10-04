@@ -173,3 +173,16 @@ describe('infrastructure flow', () => {
     expect(page('/').body).not.toContain('Edge proxy');
   });
 });
+
+describe('privacy policy', () => {
+  it('is fully readable without JavaScript, with an anchor per app', async () => {
+    const { APPS, SECTIONS, CONTACT_EMAIL } = await import('../../src/seo/privacy.js');
+    const p = page('/privacy');
+    expect(p.status).toBe(200);
+    expect(title(p.head)).toBe('App Privacy Policy | Pradhyuman Yadav');
+    for (const s of SECTIONS) expect(p.body).toContain(`<h2>${s.heading}</h2>`);
+    for (const a of APPS) expect(p.body).toContain(`<article id="${a.id}">`);
+    expect(p.body).toContain(`mailto:${CONTACT_EMAIL}`);
+    expect(renderSitemap(articles)).toContain('<loc>https://thepk.in/privacy</loc>');
+  });
+});

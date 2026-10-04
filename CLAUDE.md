@@ -57,6 +57,8 @@ For visual changes, also run `npm run build && PORT=3002 npm start` and look at 
 
 **Infrastructure flow** (`src/components/InfraFlow.jsx`, data in `src/seo/infrastructure.js`): the /pipeline diagram, typeset as real HTML (request path, then Site and Operations groups, open/sign-in tags, links out) with ink connectors and a pulse showing request direction. The server renders the same data as plain HTML for crawlers. The old hand-drawn SVG diagrams were removed, and Home no longer shows one. `SERVICES` in `siteMeta.js` drives the "Live services" list on the same page and the Services section of llms.txt.
 
+**App privacy policy** (`/privacy`, page `src/pages/Privacy.jsx`, content in `src/seo/privacy.js`): one policy for every published app, also rendered in full by the server for store reviewers. To publish an app, add it to `APPS` (its store link is `https://thepk.in/privacy#<id>`) and bump `UPDATED`; every field must stay true for the shipped build (check its analytics, ads, purchase, network and permission settings).
+
 **Other backends and embeds:**
 - `/llm-chat` calls `https://api.thepk.in` (`/health`, `/api/llm/models`, `/api/llm/stream`, `/api/llm/generate`). `swagger_backend_openapi.json` documents it, and `swagger_squidex_api_doc.json` documents Squidex.
 - `/tools/portrait-processor` posts images to `VITE_API_URL` (default `http://localhost:8000`). No such backend is deployed, so this tool does not work in production.
