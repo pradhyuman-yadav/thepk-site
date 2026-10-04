@@ -22,12 +22,15 @@ import LLMChat from './pages/LLMChat';
 import Pipeline from './pages/Pipeline';
 import DCMetro from './pages/DCMetro';
 import NotFound from './pages/NotFound';
+import Flightline from './pages/Flightline';
 import Privacy from './pages/Privacy';
 import { RouteSeo } from './hooks/useSeo';
 import { wipeElement, watchForNewContent } from './utils/wordWipe';
+import { applySkin } from './utils/skins';
 import './styles/App.css';
 
 const routeKey = (location) => location.pathname + location.search;
+
 
 // Old page wipes out word by word, then the new page wipes in. Later content (loaded data,
 // show more, new messages) wipes in as it appears.
@@ -54,6 +57,8 @@ function AnimatedRoutes() {
   useLayoutEffect(() => {
     const root = rootRef.current;
     root.style.visibility = '';
+    // Swap the palette while the page is blank: the old page wiped out in its colours, the new one wipes in with its own
+    applySkin(displayLocation.pathname);
     // Lets the background fill drop the old page's layout and re-measure straight away
     window.dispatchEvent(new Event('pagechange'));
     const stopWatching = watchForNewContent(root);
@@ -84,6 +89,7 @@ function AnimatedRoutes() {
         <Route path="/pipeline" element={<Pipeline />} />
         <Route path="/dc-metro" element={<DCMetro />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/flightline" element={<Flightline />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

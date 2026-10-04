@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useArticles } from '../hooks/useArticles';
 import { useTheme } from '../contexts/theme';
 import { fillSteps, drawFill, mulberry32, clipRegion, pickReplacement, easeOutQuart, EDGES } from '../utils/textFill';
-import { buildVocabulary, collectBlocked, measureText } from '../utils/backdropDom';
+import { buildVocabulary, collectBlocked, measureText, readFaces } from '../utils/backdropDom';
 import { prefersReducedMotion, WIPE_MS } from '../utils/wordWipe';
 
 /**
@@ -46,7 +46,9 @@ const NewspaperBackdrop = () => {
     const host = layer?.parentElement;
     if (!layer || !host || !articles.length) return undefined;
 
-    const vocabulary = buildVocabulary(articles);
+    // Fonts follow the page skin; refreshed in place on every refill
+    const faces = readFaces();
+    const vocabulary = buildVocabulary(articles, faces);
     // tile: { canvas, off, index, dirty, visible, fresh, placed, ratio, width, height }
     const tiles = [];
     let blocked = null;
@@ -59,7 +61,11 @@ const NewspaperBackdrop = () => {
     let frame = null;
     const random = Math.random;
 
-    const ink = () => getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1A1A1A';
+    // --backdrop-ink lets a skin colour the background type (Flightline uses its sky blue)
+    const ink = () => {
+      const cs = getComputedStyle(document.documentElement);
+      return cs.getPropertyValue('--backdrop-ink').trim() || cs.getPropertyValue('--ink').trim() || '#1A1A1A';
+    };
     const reduced = prefersReducedMotion();
 
     // ---- Animation loop: copies clipped slices of each tile's offscreen copy ----
@@ -247,10 +253,18 @@ const NewspaperBackdrop = () => {
       tiles.forEach((t) => {
         t.dirty = true;
       });
-      const origin = layer.getBoundingClientRect();
-      runSliced(collectBlocked(host, origin), myVersion, (rects) => {
-        blocked = rects;
-        fillNextTile();
+      Object.assign(faces, readFaces());
+      // Canvas metrics need the faces loaded; cached fonts resolve immediately
+      const loads = [`900 40px ${faces.display}`, `700 40px ${faces.display}`, `italic 400 20px ${faces.serif}`, `700 20px ${faces.mono}`].map((f) =>
+        document.fonts.load(f).catch(() => null)
+      );
+      Promise.all(loads).then(() => {
+        if (myVersion !== version) return;
+        const origin = layer.getBoundingClientRect();
+        runSliced(collectBlocked(host, origin), myVersion, (rects) => {
+          blocked = rects;
+          fillNextTile();
+        });
       });
     };
 

@@ -22,6 +22,8 @@
         }
         document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
         document.documentElement.setAttribute('data-dark', dark ? '1' : '0');
+        // Page skins (same list as SKINS in src/utils/skins.js)
+        if (location.pathname === '/flightline') document.documentElement.setAttribute('data-skin', 'flightline');
       })();
     </script>
   </head>

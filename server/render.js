@@ -19,6 +19,7 @@ import { countCategories, getCategory, relatedArticles } from '../src/utils/cate
 import { formatArticleDate as displayDate } from '../src/utils/dates.js';
 import { INFRA_PATH, INFRA_GROUPS } from '../src/seo/infrastructure.js';
 import { DEVELOPER, CONTACT_EMAIL, UPDATED, APPS, SECTIONS, APP_FIELDS } from '../src/seo/privacy.js';
+import { FLIGHTLINE, DOWNLOAD, FACTS, ZONES, UPGRADES, PROGRESSION } from '../src/seo/flightline.js';
 
 // Home page hero copy. Keep in sync with src/pages/Home.jsx.
 export const HOME_HEADLINE = 'Daily AI news briefs';
@@ -87,7 +88,7 @@ const breadcrumb = (items) => ({
 /**
  * Build the <head> tags for a page.
  */
-const headTags = ({ title, description, path, search = '', type = 'website', robots = 'index,follow,max-image-preview:large', article, graph = [] }) => {
+const headTags = ({ title, description, path, search = '', type = 'website', robots = 'index,follow,max-image-preview:large', article, image, graph = [] }) => {
   const fullTitle = pageTitle(title);
   const url = canonicalUrl(path, search);
   const tags = [
@@ -102,7 +103,8 @@ const headTags = ({ title, description, path, search = '', type = 'website', rob
     `<meta property="og:title" content="${esc(fullTitle)}" />`,
     `<meta property="og:description" content="${esc(description)}" />`,
     `<meta property="og:url" content="${esc(url)}" />`,
-    `<meta name="twitter:card" content="summary" />`,
+    `<meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}" />`,
+    ...(image ? [`<meta property="og:image" content="${SITE_URL}${image}" />`, `<meta name="twitter:image" content="${SITE_URL}${image}" />`] : []),
     `<meta name="twitter:title" content="${esc(fullTitle)}" />`,
     `<meta name="twitter:description" content="${esc(description)}" />`,
   ];
@@ -260,6 +262,48 @@ export const renderPage = ({ path, searchParams, articles }) => {
       <p>${esc(HOME_SUBTEXT)}</p>
       <section><h2>Latest articles</h2><ul>${articleListItems(articles.slice(0, 10))}</ul><p><a href="/articles">All articles</a></p></section>
       <section><h2>Browse by topic</h2><ul>${topicLinks(articles)}</ul></section>`);
+    return { status: 200, head, body };
+  }
+
+  // Flightline: the game, with VideoGame structured data and its feature graphic as the share image
+  if (path === '/flightline') {
+    const head = headTags({
+      title: route.title,
+      description: route.description,
+      path,
+      image: FLIGHTLINE.feature,
+      graph: [
+        {
+          '@type': ['VideoGame', 'MobileApplication'],
+          name: FLIGHTLINE.name,
+          description: FLIGHTLINE.summary,
+          url: `${SITE_URL}/flightline`,
+          image: `${SITE_URL}${FLIGHTLINE.feature}`,
+          applicationCategory: 'GameApplication',
+          gamePlatform: FLIGHTLINE.platform,
+          operatingSystem: FLIGHTLINE.platform,
+          softwareVersion: FLIGHTLINE.version,
+          author: { '@id': PERSON_ID },
+          offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+          ...(DOWNLOAD.url ? { downloadUrl: DOWNLOAD.url, installUrl: DOWNLOAD.url } : {}),
+        },
+        breadcrumb([
+          { name: 'Home', path: '/' },
+          { name: FLIGHTLINE.name, path },
+        ]),
+      ],
+    });
+    const list = (items, key, val) => `<ul>${items.map((i) => `<li><strong>${esc(i[key])}</strong>: ${esc(i[val])}</li>`).join('')}</ul>`;
+    const body = shell(`<h1>${esc(FLIGHTLINE.name)}</h1>
+      <p>${esc(FLIGHTLINE.tagline)}</p>
+      <img src="${FLIGHTLINE.icon}" alt="Flightline app icon" width="96" height="96" />
+      <p>${esc(FLIGHTLINE.summary)}</p>
+      ${list(FACTS, 'label', 'value')}
+      ${DOWNLOAD.url ? `<p><a href="${DOWNLOAD.url}">${esc(DOWNLOAD.label)}</a></p>` : `<p>Coming soon to ${esc(FLIGHTLINE.platform)}.</p>`}
+      <section><h2>Six zones</h2><ol>${ZONES.map((z) => `<li>${esc(z.gate)} ${esc(z.name)}: ${esc(z.line)}</li>`).join('')}</ol></section>
+      <section><h2>The hangar</h2>${list(UPGRADES, 'name', 'desc')}</section>
+      <section><h2>Keep coming back</h2>${list(PROGRESSION, 'name', 'desc')}</section>
+      <p><a href="${FLIGHTLINE.privacyAnchor}">Privacy policy</a></p>`);
     return { status: 200, head, body };
   }
 

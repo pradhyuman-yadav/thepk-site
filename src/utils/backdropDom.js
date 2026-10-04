@@ -4,9 +4,23 @@
  */
 import { countCategories } from './categorize';
 
-const DISPLAY = "'Playfair Display', 'Times New Roman', serif";
-const SERIF = "'Times New Roman', Georgia, serif";
-const MONO = "'Courier New', monospace";
+// Default faces; pages with a skin override them through CSS variables (see readFaces)
+export const DEFAULT_FACES = {
+  display: "'Playfair Display', 'Times New Roman', serif",
+  serif: "'Times New Roman', Georgia, serif",
+  mono: "'Courier New', monospace",
+};
+
+/** Current type faces from the CSS variables on <html>, so skinned pages use their own fonts. */
+export const readFaces = () => {
+  const cs = getComputedStyle(document.documentElement);
+  const pick = (name, fallback) => cs.getPropertyValue(name).trim() || fallback;
+  return {
+    display: pick('--font-display', DEFAULT_FACES.display),
+    serif: pick('--font-serif', DEFAULT_FACES.serif),
+    mono: pick('--font-mono', DEFAULT_FACES.mono),
+  };
+};
 
 export const TEXT_PAD = 4; // clearance around real text
 export const BOX_PAD = 2; // clearance around controls, rules and filled boxes
@@ -39,8 +53,11 @@ export const measureText = (text, font) => {
   return { w: r.w * k, ascent: r.ascent * k, descent: r.descent * k };
 };
 
-/** Vocabulary from the current edition: title words, topic names and the masthead. */
-export const buildVocabulary = (articles) => {
+/**
+ * Vocabulary from the current edition: title words, topic names and the masthead.
+ * `faces` is read each time a font string is built, so updating it in place re-skins later fills.
+ */
+export const buildVocabulary = (articles, faces = DEFAULT_FACES) => {
   const words = new Set(['THEPK.IN', 'Daily', 'News']);
   countCategories(articles).forEach((c) => words.add(c.label));
   articles.slice(0, 60).forEach((a) =>
@@ -54,10 +71,10 @@ export const buildVocabulary = (articles) => {
     const face = i % 7 === 0 ? 'mono' : i % 3 === 0 ? 'serif' : 'display';
     const font = (size) =>
       face === 'mono'
-        ? `700 ${size}px ${MONO}`
+        ? `700 ${size}px ${faces.mono}`
         : face === 'serif'
-          ? `italic 400 ${size}px ${SERIF}`
-          : `${size >= 20 ? 900 : 700} ${size}px ${DISPLAY}`;
+          ? `italic 400 ${size}px ${faces.serif}`
+          : `${size >= 20 ? 900 : 700} ${size}px ${faces.display}`;
     return { text, font };
   });
 };

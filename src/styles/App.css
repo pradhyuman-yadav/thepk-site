@@ -8434,3 +8434,234 @@ a.art-tag {
   font-size: 1rem;
   line-height: 1.6;
 }
+
+/* ==========================================================================
+   Flightline skin (/flightline). Same layout, placement and motion as every
+   page; only the palette and type change. Tokens come from the game's design
+   system (Theme.cs: Day / Night) and type styles (UIKit.cs).
+   ========================================================================== */
+[data-skin="flightline"]:not([data-theme="dark"]) {
+  --bg: #f2f5f8;
+  --page: #f2f5f8;
+  --ink: #111820;
+  --border: #d5dde4;
+  --muted: #d5dde4;
+  --shadow: rgba(17, 24, 32, 0.12);
+  --bg-color: #f2f5f8;
+  --page-bg: #f2f5f8;
+  --header-bg: #f2f5f8;
+  --text-color: #111820;
+  --accent-color: #111820;
+  --hover-text-color: #111820;
+  --border-color: #d5dde4;
+  --nav-hover: #d5dde4;
+  --signal: #ffcc00;
+  --on-signal: #111820;
+  --sky: #4aa8e0;
+  --backdrop-ink: #4aa8e0;
+  --backdrop-opacity: 0.3;
+}
+
+[data-skin="flightline"][data-theme="dark"] {
+  --bg: #0b121a;
+  --page: #0b121a;
+  --ink: #eef3f7;
+  --border: #263341;
+  --muted: #16212c;
+  --shadow: rgba(0, 0, 0, 0.5);
+  --bg-color: #0b121a;
+  --page-bg: #0b121a;
+  --header-bg: #0b121a;
+  --text-color: #eef3f7;
+  --accent-color: #eef3f7;
+  --hover-text-color: #eef3f7;
+  --border-color: #263341;
+  --nav-hover: #16212c;
+  --signal: #ffcc00;
+  --on-signal: #111820;
+  --sky: #5cb8f0;
+  --backdrop-ink: #5cb8f0;
+  --backdrop-opacity: 0.24;
+}
+
+[data-skin="flightline"] {
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-serif: 'B612', 'Segoe UI', sans-serif;
+  --font-mono: 'B612 Mono', 'Consolas', monospace;
+}
+
+[data-skin="flightline"] body {
+  font-family: var(--font-serif);
+}
+
+/* Display styles are uppercase in the game (DisplayXL, DisplayL, Button) */
+[data-skin="flightline"] .page-title,
+[data-skin="flightline"] .site-title-vertical {
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+[data-skin="flightline"] .site-ribbon .navigation a {
+  background-image: linear-gradient(var(--signal), var(--signal));
+}
+
+[data-skin="flightline"] .text-link {
+  text-decoration-color: var(--signal);
+}
+
+/* ---------- Flightline page content ---------- */
+.flightline-header {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2rem);
+}
+
+.flightline-icon {
+  width: clamp(64px, 9vw, 104px);
+  height: auto;
+  flex-shrink: 0;
+}
+
+.flightline-header .page-title {
+  margin-bottom: 0.4rem;
+}
+
+.home-page .flightline-summary,
+.flightline-summary {
+  font-size: clamp(1.1rem, 1.6vw, 1.3rem);
+  line-height: 1.6;
+  max-width: 60ch;
+  margin: 0 0 1.5rem;
+}
+
+.flightline-facts {
+  list-style: none;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2.5rem;
+}
+
+.flightline-facts li {
+  display: flex;
+  flex-direction: column;
+}
+
+.flightline-fact-label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.flightline-fact-value {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.flightline-cta {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  background: var(--signal, var(--ink));
+  color: var(--on-signal, var(--page));
+  transition: transform 0.2s ease;
+}
+
+.flightline-cta:active {
+  transform: translateY(1px);
+}
+
+.flightline-soon {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.flightline-feature {
+  margin: 0 0 clamp(2.5rem, 5vw, 4rem);
+}
+
+.flightline-feature img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.flightline-zones {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem 2rem;
+}
+
+.flightline-zones li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.75rem;
+  align-items: baseline;
+}
+
+/* Gate codes set like the game's split-flap tiles */
+.flightline-gate {
+  grid-row: span 2;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.2rem 0.45rem;
+  background: var(--signal, var(--ink));
+  color: var(--on-signal, var(--page));
+  align-self: start;
+}
+
+.flightline-zone-name,
+.flightline-item-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.flightline-zone-line,
+.flightline-item-desc {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.flightline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem 2rem;
+}
+
+.flightline-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.flightline-meta {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.flightline-page .section-heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+  line-height: 1.1;
+  margin: 0 0 1.25rem;
+}

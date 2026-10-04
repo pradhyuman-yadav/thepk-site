@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Tools = () => {
   const tools = [
@@ -16,6 +17,7 @@ const Tools = () => {
   ];
 
   const projects = [
+    { id: "project-flightline", name: "Flightline", description: "Endless arcade flyer for Android: six weather zones, hangar upgrades and daily missions. No ads, plays offline.", category: "Game", status: "In Development", technologies: ["Unity", "C#", "Android"], githubLink: "", liveLink: "", pageLink: "/flightline", startDate: "2026" },
     { id: "project-A", name: "Platform", description: "My platform showcasing projects, skills, and experience.", category: "Web Development", status: "Live", technologies: ["React", "Vite", "Tailwind CSS", "Docker", "Jenkins"], githubLink: "https://thepk.in", liveLink: "https://thepk.in", startDate: "Jan 2025", endDate: "Present" },
     { id: "project-D", name: "Video Streaming Platform", description: "Full-stack platform for video uploading, processing, and streaming with user management.", category: "Web Development", status: "Completed", technologies: ["Next.js", "AWS", "Docker"], githubLink: "https://github.com/pradhyuman-yadav/shadowveil", liveLink: "", startDate: "Oct 2024" },
     { id: "project-B", name: "JobMatch Automator", description: "Automated job application data collection from multiple job boards.", category: "Automation", status: "Completed", technologies: ["Python", "Selenium", "Discord Webhooks"], githubLink: "", liveLink: "", startDate: "Jun 2024", endDate: "Jul 2024" },
@@ -77,12 +79,17 @@ const Tools = () => {
                   <span key={i} className="exp-tech">{tech}</span>
                 ))}
               </div>
-              {(project.githubLink || project.liveLink) && (
+              {(project.githubLink || project.liveLink || project.pageLink) && (
                 <div style={{ marginTop: '.6rem', display: 'flex', gap: '1rem' }}>
                   {project.githubLink && (
                     <a href={project.githubLink} className="profile-contact" target="_blank" rel="noopener noreferrer">
                       GitHub →
                     </a>
+                  )}
+                  {project.pageLink && (
+                    <Link to={project.pageLink} className="profile-contact">
+                      Read more →
+                    </Link>
                   )}
                   {project.liveLink && (
                     <a href={project.liveLink} className="profile-contact" target="_blank" rel="noopener noreferrer">

@@ -64,6 +64,10 @@ export const STATIC_ROUTES = {
     title: 'DC Metro Real-Time Transit',
     description: 'Real-time Washington DC Metro transit information.',
   },
+  '/flightline': {
+    title: 'Flightline: Endless Flight Game for Android',
+    description: 'Flightline is an endless arcade flyer for Android: steer a jet through six weather zones, dodge storms and lightning. No ads, plays offline.',
+  },
   '/privacy': {
     title: 'App Privacy Policy',
     description: 'Privacy policy for the apps and games published by Pradhyuman Yadav: what each app stores, what it sends, and how to reach me.',
