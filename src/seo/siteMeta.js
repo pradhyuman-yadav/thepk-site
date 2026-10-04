@@ -26,6 +26,17 @@ export const NAV_LINKS = [
   { path: '/dc-metro', label: 'DC Metro' },
 ];
 
+// Public (unprotected) self-hosted services, listed on /pipeline, in its server HTML and in llms.txt.
+// Sign-in-protected services (docuseal, excalidraw, home, lightllm) are intentionally not listed.
+export const SERVICES = [
+  { name: 'API', url: 'https://api.thepk.in', description: 'Backend REST API for the site, including the self-hosted LLM endpoints behind AI Chat.' },
+  { name: 'DC Metro', url: 'https://dc-metro.thepk.in', description: 'Real-time Washington DC Metro transit information.' },
+  { name: 'n8n', url: 'https://n8n.thepk.in', description: 'Low-code workflow automation: event-driven triggers and multi-service integrations.' },
+  { name: 'Portainer', url: 'https://portainer.thepk.in', description: 'Docker container management for the home server: monitoring, images, volumes and stack deployments.' },
+  { name: 'Proxy', url: 'https://proxy.thepk.in', description: 'Reverse proxy that routes the thepk.in subdomains and terminates SSL.' },
+  { name: 'Squidex', url: 'https://squidex.thepk.in', description: 'Headless CMS that stores the articles and the About page content.' },
+];
+
 // Meta for every static route. Article and topic pages build theirs from CMS data.
 export const STATIC_ROUTES = {
   '/': { title: '', description: DEFAULT_DESCRIPTION },

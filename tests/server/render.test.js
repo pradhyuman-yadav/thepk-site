@@ -147,3 +147,18 @@ describe('initialDataScript', () => {
     expect(script).not.toContain('\u2028');
   });
 });
+
+describe('services', () => {
+  it('appear as links in the pipeline page HTML and in llms.txt', async () => {
+    const { SERVICES } = await import('../../src/seo/siteMeta.js');
+    const p = page('/pipeline');
+    const txt = renderLlmsTxt(articles);
+    expect(txt).toContain('## Services');
+    for (const s of SERVICES) {
+      expect(p.body).toContain(`<a href="${s.url}">${s.name}</a>`);
+      expect(txt).toContain(`- [${s.name}](${s.url}):`);
+    }
+    // Only the pipeline page carries the list
+    expect(page('/tools').body).not.toContain('Live services');
+  });
+});

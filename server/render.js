@@ -13,6 +13,7 @@ import {
   pageTitle,
   canonicalUrl,
   clampDescription,
+  SERVICES,
 } from '../src/seo/siteMeta.js';
 import { countCategories, getCategory, relatedArticles } from '../src/utils/categorize.js';
 import { formatArticleDate as displayDate } from '../src/utils/dates.js';
@@ -282,6 +283,11 @@ export const renderPage = ({ path, searchParams, articles }) => {
   crumbs.push({ name: route.title, path });
   graph.push(breadcrumb(crumbs));
 
+  const serviceLinks =
+    path === '/pipeline'
+      ? `<section><h2>Live services</h2><ul>${SERVICES.map((s) => `<li><a href="${s.url}">${esc(s.name)}</a>: ${esc(s.description)}</li>`).join('')}</ul></section>`
+      : '';
+
   const toolLinks =
     path === '/tools'
       ? `<ul>${Object.entries(STATIC_ROUTES)
@@ -293,7 +299,7 @@ export const renderPage = ({ path, searchParams, articles }) => {
   return {
     status: 200,
     head: headTags({ title: route.title, description: route.description, path, graph }),
-    body: shell(`<h1>${esc(route.title)}</h1><p>${esc(route.description)}</p>${toolLinks}`),
+    body: shell(`<h1>${esc(route.title)}</h1><p>${esc(route.description)}</p>${toolLinks}${serviceLinks}`),
   };
 };
 
@@ -412,6 +418,10 @@ ${countCategories(articles)
 ## Tools
 
 ${tools.map(([p, r]) => `- [${r.title}](${SITE_URL}${p}): ${r.description}`).join('\n')}
+
+## Services
+
+${SERVICES.map((s) => `- [${s.name}](${s.url}): ${s.description}`).join('\n')}
 
 ## About
 

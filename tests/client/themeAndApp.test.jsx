@@ -66,3 +66,23 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();
   });
 });
+
+describe('Pipeline', () => {
+  it('lists the live services as external links', async () => {
+    const { MemoryRouter } = await import('react-router-dom');
+    const { default: Pipeline } = await import('../../src/pages/Pipeline');
+    const { SERVICES } = await import('../../src/seo/siteMeta');
+    render(
+      <MemoryRouter>
+        <Pipeline />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole('heading', { name: 'Live services' })).toBeInTheDocument();
+    for (const s of SERVICES) {
+      const link = screen.getByRole('link', { name: s.name });
+      expect(link).toHaveAttribute('href', s.url);
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    }
+  });
+});

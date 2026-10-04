@@ -1,5 +1,6 @@
 import React from 'react';
 import InfrastructureSVG from '../components/InfrastructureSVG';
+import { SERVICES } from '../seo/siteMeta';
 
 const Pipeline = () => {
   const cards = [
@@ -44,6 +45,19 @@ const Pipeline = () => {
             </div>
           ))}
         </div>
+
+        <h2 className="section-header" id="live-services">Live services</h2>
+        <ul className="service-list">
+          {SERVICES.map((s) => (
+            <li key={s.url} className="service-item">
+              <a href={s.url} className="service-name" target="_blank" rel="noopener noreferrer">
+                {s.name}
+              </a>
+              <span className="service-host">{s.url.replace('https://', '')}</span>
+              <p className="service-desc">{s.description}</p>
+            </li>
+          ))}
+        </ul>
 
         <h2 className="section-header newspaper-section-header">Skills Demonstrated</h2>
         <div className="pipeline-skills-grid">

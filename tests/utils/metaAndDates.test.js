@@ -56,3 +56,24 @@ describe('siteMeta', () => {
     expect(NAV_LINKS.map((l) => l.label)).toEqual(['Home', 'Articles', 'Tools', 'About Me', 'AI Chat (SLM)', 'Pipeline', 'DC Metro']);
   });
 });
+
+describe('SERVICES', () => {
+  it('lists only the unprotected thepk.in web services, over https', async () => {
+    const { SERVICES } = await import('../../src/seo/siteMeta.js');
+    expect(SERVICES.map((s) => s.url)).toEqual([
+      'https://api.thepk.in',
+      'https://dc-metro.thepk.in',
+      'https://n8n.thepk.in',
+      'https://portainer.thepk.in',
+      'https://proxy.thepk.in',
+      'https://squidex.thepk.in',
+    ]);
+    for (const s of SERVICES) {
+      expect(s.description.length).toBeGreaterThan(10);
+      expect(s.description).not.toMatch(/[–—]/);
+    }
+    for (const hidden of ['docuseal', 'excalidraw', 'home.', 'lightllm']) {
+      expect(SERVICES.some((s) => s.url.includes(hidden))).toBe(false);
+    }
+  });
+});

@@ -8199,3 +8199,52 @@ a.art-tag {
 .backdrop-tile.is-drawn {
   opacity: 1;
 }
+
+/* Pipeline: live public services */
+.service-list {
+  list-style: none;
+  margin: 0 0 3rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem 2.5rem;
+}
+
+.service-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.service-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  color: var(--ink);
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0 2px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.service-name:hover {
+  background-size: 100% 2px;
+}
+
+.service-host {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink);
+  opacity: 0.75;
+}
+
+.service-desc {
+  margin: 0.3rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 40ch;
+}
